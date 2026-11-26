@@ -13,7 +13,7 @@ let currency = localStorage.getItem('claws-currency') === 'EUR' ? 'EUR' : 'RON';
 const items = [];
 const drafts = new Map();
 let delivery = { method: 'pickup' };
-let carouselPosition = 0;
+let carouselPosition = 2;
 let statusTimer;
 let preferredSizing = 'measure';
 const nav = [['home','Acasă|Home'],['custom','Seturi la comandă|Custom sets'],['nails','Seturi gata făcute|Nail sets'],['sizing','Ghid de mărimi|Sizing'],['faq','Întrebări frecvente|FAQ'],['shipping','Livrare|Shipping'],['contact','Contact']];
@@ -112,10 +112,29 @@ function renderContent() {
   $('#size-steps').replaceChildren(...sizingSteps.map(step => el('li', t(step))));
   const sizeRows = [['XS',14,11,12,10,8],['S',15,12,13,11,8],['M',16,12,13,11,9],['L',18,13,14,12,10]];
   $('#size-table').innerHTML = '<p>' + t('Valorile în mm sunt orientative. Pentru un set la comandă, notează lățimea exactă pentru fiecare unghie.|Widths in mm are a reference. For a custom set, provide the actual width of each nail.') + '</p><div class="table-scroll"><table><thead><tr><th>' + t('Mărime|Size') + '</th>' + fingers.map(finger => '<th scope="col">' + t(finger) + '</th>').join('') + '</tr></thead><tbody>' + sizeRows.map(row => '<tr><th scope="row">' + row[0] + '</th>' + row.slice(1).map(value => '<td>' + value + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>';
-  $('#questions').replaceChildren(...faq.map(([category, entries], group) => {
-    const section = el('section');
-    section.append(el('h3', t(category)), ...entries.map(([question, answer], index) => accordion(t(question), language === 'en' ? faqEnglish[group][index] : answer)));
-    return section;
+  const faqLinks = {
+    'Size Guide': '?page=sizing',
+    'ghidul de mărimi': '?page=sizing',
+    'WhatsApp': 'https://wa.me/' + shop.whatsapp,
+    'ilariailariaaa8@gmail.com': 'mailto:ilariailariaaa8@gmail.com',
+    '@clawsbyalix': 'https://www.tiktok.com/@clawsbyalix'
+  };
+  $('#questions').replaceChildren(...faq.map(([question, ro, en]) => {
+    const entry = accordion(t(question), '');
+    const answer = entry.querySelector('p');
+    const parts = (language === 'ro' ? ro : en).split(/(Size Guide|ghidul de mărimi|WhatsApp|ilariailariaaa8@gmail\.com|@clawsbyalix)/);
+    parts.forEach(part => {
+      if (!Object.hasOwn(faqLinks, part)) {
+        answer.append(part);
+        return;
+      }
+      const link = el('a', part);
+      link.href = faqLinks[part];
+      link.className = 'text-link';
+      if (link.href === new URL('?page=sizing', location.href).href) link.dataset.page = 'sizing';
+      answer.append(link);
+    });
+    return entry;
   }));
   const lastUpdated = new Intl.DateTimeFormat(language === 'ro' ? 'ro-RO' : 'en-GB', {dateStyle:'long',timeZone:'UTC'}).format(new Date('2026-11-26'));
   $('#policy').replaceChildren(el('p', t('Actualizată la |Last updated ') + lastUpdated), ...shippingPolicy.flatMap(([title, body], index) => [el('h3', (index + 1) + '. ' + t(title)), el('p', language === 'en' ? shippingEnglish[index] : body)]));
@@ -323,39 +342,40 @@ $('#kit').onclick = () => configure(-1);
 dialog.addEventListener('close', () => { if (!dialog.open) dialogBody.replaceChildren(); });
 $('#close').onclick = () => dialog.close();
 dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
-$('#manual-sizing').onclick = () => { preferredSizing = 'measure'; };
 $('#kit-sizing').onclick = () => { preferredSizing = 'kit'; };
 const carousel = $('.editorial');
 const ring = $('.carousel-ring');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-const cards = shop.photos.map(([file]) => {
+const slots = [-1, 0, 1].map(offset => {
   const card = el('figure');
-  card.className = 'photo';
-  const image = el('img');
-  image.src = 'assets/' + file + '.jpg';
-  image.alt = '';
-  card.append(image);
-  return card;
+  card.className = 'photo photo-slot';
+  const layers = [el('img'), el('img')];
+  const photoWindow = el('div');
+  photoWindow.className = 'slot-window';
+  layers.forEach(image => { image.alt = ''; photoWindow.append(image); });
+  card.append(photoWindow);
+  return {offset, card, layers};
 });
-ring.replaceChildren(...cards);
+ring.replaceChildren(...slots.map(slot => slot.card));
 let frame;
 let drag;
-
 function drawCarousel() {
-  const count = cards.length;
-  const active = ((Math.round(carouselPosition) % count) + count) % count;
-  cards.forEach((card, index) => {
-    const angle = (index - carouselPosition) * 2 * Math.PI / count;
-    const depth = Math.cos(angle);
-    const horizontal = Math.sin(angle);
-    card.style.setProperty('--orbit-x', horizontal.toFixed(4));
-    card.style.setProperty('--orbit-y', ((1 - depth) * .5).toFixed(4));
-    card.style.setProperty('--orbit-scale', (.78 + .22 * depth).toFixed(4));
-    card.style.setProperty('--orbit-turn', (horizontal * 22).toFixed(3) + 'deg');
-    card.style.opacity = Math.max(0, Math.min(1, (depth + .35) * 1.25));
-    card.style.zIndex = 100 + Math.round(95 * depth);
-    card.setAttribute('aria-hidden', index !== active);
-    card.firstElementChild.alt = index === active ? t(shop.photos[index][1]) : '';
+  const count = shop.photos.length;
+  const indexFor = step => ((step % count) + count) % count;
+  const base = Math.floor(carouselPosition);
+  const progress = carouselPosition - base;
+  const active = indexFor(Math.round(carouselPosition));
+  slots.forEach(({offset, card, layers}) => {
+    const from = base + offset;
+    layers.forEach((image, layer) => {
+      const file = 'assets/' + shop.photos[indexFor(from + layer)][0] + '.jpg';
+      if (image.getAttribute('src') !== file) image.src = file;
+      image.style.setProperty('--shift', ((layer - progress) * 38).toFixed(2) + '%');
+      image.style.setProperty('--turn', ((layer - progress) * 14).toFixed(2) + 'deg');
+      image.style.opacity = layer === 0 ? 1 : progress;
+    });
+    card.setAttribute('aria-hidden', offset !== 0);
+    layers[0].alt = offset === 0 ? t(shop.photos[active][1]) : '';
   });
   const countLabel = (active + 1) + ' / ' + count;
   if ($('#slide-count').textContent !== countLabel) $('#slide-count').textContent = countLabel;

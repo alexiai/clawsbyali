@@ -29,32 +29,20 @@ const sizingSteps = [
 ];
 
 const faq = [
-  ['Comenzi|Ordering', [
-    ['Cum plasez o comandă?|How can I place an order?', 'Alege categoria, forma și lungimea, apoi introdu dimensiunile și completează datele din coș. Trimite mesajul pregătit în WhatsApp. Confirmăm împreună modelul, disponibilitatea, termenul, transportul și plata. Comanda devine fermă după confirmarea noastră.'],
-    ['Am nevoie de cont?|Do I need to create an account?', 'Poți naviga și trimite o cerere fără cont.'],
-    ['Pot personaliza unghiile?|Can I customise my press-on nails?', 'Da. Poți alege culorile, forma, lungimea, finisajul și detaliile. Descrie ideea în formular sau discutăm pe WhatsApp. Confirmăm designul înainte de lucru.'],
-    ['Pot modifica cererea?|Can I change my order after submitting the form?', 'Putem discuta modificările pe WhatsApp înainte de confirmare. După începerea lucrului, unele schimbări pot fi imposibile.']
-  ]],
-  ['Produse și mărimi|Products & Sizing', [
-    ['Ce conține comanda?|What is included in my order?', 'Setul handmade vine cu o pilă mini, un bețișor de lemn pentru cuticule și instrucțiuni de aplicare. Adezivul și benzile adezive nu sunt incluse. Adezivele mini din comerț nu oferă fixarea pe care o caut, așa că recomand KISS. Îl poți cumpăra separat sau îl pot adăuga la comandă pentru 20 lei. Flaconul ajunge pentru mai multe aplicări.'],
-    ['Cum aleg mărimea?|How do I choose the correct nail size?', 'Avem mărimile XS, S, M și L. Consultă ghidul de mărimi și scrie-ne pe WhatsApp dacă ai nevoie de ajutor.'],
-    ['Includeți lipici?|Do you include nail glue?', 'Poți adăuga un flacon de adeziv KISS la comandă pentru 20 lei. Urmează instrucțiunile producătorului la aplicare.'],
-    ['Cât rezistă unghiile press-on?|How long do press-on nails last?', 'Cu o pregătire și o aplicare corectă, pot rezista peste o lună. Durata depinde de tehnica de aplicare, adeziv și activitățile zilnice. Urmează instrucțiunile de aplicare din set.'],
-    ['Pot refolosi setul?|Can I reuse my press-on nails?', 'De cele mai multe ori, da. Acesta e unul dintre avantajele unghiilor press-on, dar depinde de cum le aplici, le îndepărtezi și le depozitezi. Îndepărtează-le cu grijă și verifică starea fiecărei unghii.'],
-    ['Seturile arată exact ca în poze?|Are all sets exactly the same as the pictures?', 'Fiecare set este lucrat manual, așa că pot exista mici diferențe de culoare, poziționare sau finisaj. Lumina și ecranul pot schimba aspectul culorilor.']
-  ]],
-  ['Livrare și plată|Shipping & Payment', [
-    ['Unde livrați?|Where do you ship?', 'Livrăm în România. Urmărește-ne pe social media pentru eventuale opțiuni internaționale.'],
-    ['Cât costă transportul?|How much does shipping cost?', 'Costul depinde de destinație și metoda de livrare. Îl confirmăm pe WhatsApp înainte de acceptarea comenzii.'],
-    ['Cât durează livrarea?|How long does delivery take?', 'Estimarea este de 5–7 zile lucrătoare pentru realizare, apoi 1–3 zile pentru transport. Confirmăm termenele înainte să accepți comanda.'],
-    ['Cum plătesc?|How do I pay?', 'Primești instrucțiunile după ce confirmăm setul și livrarea. Plata se face prin transfer bancar sau prin metoda convenită. Începem lucrul după primirea plății, dacă nu stabilim altfel.'],
-    ['Pot urmări coletul?|Can I track my order?', 'Îți trimitem numărul sau linkul de urmărire după expediere, când serviciul ales îl oferă.']
-  ]],
-  ['Retururi și asistență|Returns & Customer Support', [
-    ['Pot returna comanda?|Can I return my order?', 'Pentru cumpărăturile online există în general un termen de retragere de 14 zile de la primire. Produsele realizate după specificațiile clientului sau personalizate clar pot fi exceptate. Contactează-ne pentru detalii despre cazul tău.'],
-    ['Ce fac dacă produsul e deteriorat sau greșit?|What if my order arrives damaged or incorrect?', 'Scrie-ne cât mai repede pe WhatsApp sau prin e-mail. Include detaliile comenzii și fotografii, dacă sunt relevante. Rezolvăm situația în conformitate cu drepturile tale de consumator.'],
-    ['Cum vă contactez?|How can I contact you?', 'Ne găsești pe WhatsApp, la ilariailariaaa8@gmail.com sau pe TikTok @clawsbyalix.']
-  ]]
+  ["Cum comand?|How do I place an order?", "Alege designul, forma și lungimea, introdu măsurătorile și trimite formularul. Se va deschide WhatsApp, unde confirmăm detaliile, disponibilitatea, livrarea și plata înainte de a începe lucrul.\n\nPoți comanda fără cont. Alege unghiile dorite și ne ocupăm noi de restul.", "Choose your favourite design, shape and length, enter your nail measurements and submit the order form. You'll be redirected to WhatsApp, where we'll confirm the details, availability, delivery and payment before your set is made.\n\nNo account needed. Just choose your nails and we'll take it from there."],
+  ["Pot personaliza setul?|Can I customise my set?", "Sigur! Alege culorile, forma, lungimea, finisajele și detaliile care ți se potrivesc. Trimite-ne ideile sau fotografiile de inspirație pe WhatsApp și discutăm ce putem realiza.", "Absolutely! Your nails should feel like yours. Request custom colours, shapes, lengths, finishes or details. Send us your ideas or inspiration photos on WhatsApp, and we'll discuss what's possible before production."],
+  ["Ce conține un set?|What comes in a set?", "Fiecare set lucrat manual include unghiile press-on, o pilă mini, un bețișor de lemn pentru cuticule și instrucțiuni de aplicare.\n\nPentru o fixare bună, recomandăm adezivul KISS. Poți adăuga un flacon la comandă pentru 20 lei. Ajunge pentru mai multe aplicări.", "Every handmade set includes your press-on nails, a mini nail file, a wooden cuticle stick and application instructions.\n\nFor the best hold, we recommend KISS nail glue. You can add a full-size bottle to your order for just 20 lei. One bottle lasts for multiple applications."],
+  ["Cum îmi găsesc mărimea?|How do I find my size?", "Avem mărimile XS, S, M și L. Consultă ghidul de mărimi. Dacă ai dubii, scrie-ne pe WhatsApp și te ajutăm să alegi.", "We offer XS, S, M and L. Check our Size Guide to find your fit. Not sure? Message us on WhatsApp and we'll help you choose."],
+  ["Cât rezistă?|How long do they last?", "Cu pregătirea și aplicarea corectă, unghiile press-on pot rezista peste o lună. Contează adezivul ales și îngrijirea.", "With proper nail preparation and application, your press-ons can last over a month. The right adhesive and a little care make all the difference."],
+  ["Le pot refolosi?|Can I reuse them?", "Da! Dacă le îndepărtezi cu grijă și le depozitezi corect, poți purta setul preferat de mai multe ori. Reutilizarea depinde de starea unghiilor după fiecare purtare.", "Yes! That's one of the best things about press-ons. With gentle removal and proper storage, you can enjoy your favourite set more than once. Reusability depends on the condition of the nails after each wear."],
+  ["Setul va arăta exact ca în fotografii?|Will my set look exactly like the pictures?", "Fiecare set este lucrat manual, așa că pot apărea mici variații de culoare, poziționare sau finisaj. Lumina și setările ecranului pot influența aspectul culorilor.", "Every set is made by hand, so tiny variations in colour, placement or finish are part of what makes each one unique. Screen settings and lighting may also affect how colours appear."],
+  ["Unde livrați?|Where do you ship?", "Momentan livrăm în toată România. Sperăm să extindem livrarea în curând, așa că urmărește-ne pe rețelele sociale pentru noutăți.", "We currently ship throughout Romania. We're hoping to expand soon, so follow us on social media for updates."],
+  ["Cât costă livrarea și cât durează?|How much is shipping and how long does it take?", "Realizarea durează de obicei 5–7 zile lucrătoare, iar livrarea încă aproximativ 1–3 zile lucrătoare. Costul depinde de destinație și de metoda aleasă. Confirmăm totalul și termenul estimat înainte de a accepta comanda.", "Production usually takes 5–7 business days, followed by approximately 1–3 business days for delivery. Shipping costs depend on your location and chosen delivery method. We'll confirm the total and estimated timeframe with you before accepting your order."],
+  ["Cum plătesc?|How do I pay?", "După confirmarea modelului și a livrării, îți trimitem instrucțiunile de plată. Poți plăti prin transfer bancar sau prin altă metodă convenită. Începem să lucrăm la set după ce primim plata.", "Once we've confirmed your design and delivery details, we'll send you the payment instructions. Payment is made by bank transfer or another agreed method. Your set goes into production once payment is received."],
+  ["Îmi pot urmări comanda?|Can I track my order?", "Da. Dacă metoda de livrare permite urmărirea, îți trimitem datele de urmărire imediat ce coletul pleacă spre tine.", "Yes, whenever tracking is available through the selected delivery service, we'll send you the tracking details as soon as your parcel is on its way."],
+  ["Îmi pot returna comanda?|Can I return my order?", "Pentru comenzile online există, în general, drept de retragere timp de 14 zile de la primire. Anumite produse realizate la comandă sau clar personalizate pot fi exceptate în temeiul legii aplicabile. Pentru detalii, consultă politica de retururi și rambursări sau contactează-ne.", "Online purchases generally come with a 14-day right of withdrawal from the day you receive your order. Certain clearly personalised or custom-made items may be exempt under applicable law. For full details, please see our Returns & Refunds Policy or contact us."],
+  ["Ce fac dacă e o problemă cu comanda?|What if something is wrong with my order?", "Dacă setul ajunge deteriorat sau ceva nu este în regulă, scrie-ne cât mai curând pe WhatsApp sau prin e-mail, cu detaliile comenzii și fotografii. Vom analiza situația și vom căuta o soluție în acord cu drepturile tale de consumator.", "Your satisfaction matters. If your order arrives damaged or something isn't right, message us as soon as possible on WhatsApp or email, with your order details and photos. We'll look into it and help find a solution in line with your consumer rights."],
+  ["Ai o întrebare?|Have a question?", "Te ajutăm cu drag! Scrie-ne pe WhatsApp, trimite un e-mail la ilariailariaaa8@gmail.com sau caută-ne pe TikTok @clawsbyalix.", "We're happy to help! Reach us on WhatsApp, email us at ilariailariaaa8@gmail.com, or find us on TikTok @clawsbyalix."]
 ];
 
 const shippingPolicy = [
@@ -68,31 +56,6 @@ const shippingPolicy = [
   ['Date de livrare incorecte|Incorrect delivery information','Verifică datele înainte de trimiterea cererii. Dacă ai făcut o greșeală, scrie-ne pe WhatsApp cât mai repede. După expediere, modificarea depinde de curier și poate fi imposibilă.'],
   ['Colete întârziate, pierdute sau deteriorate|Delayed, lost or damaged parcels','Contactează-ne pentru a verifica situația cu serviciul de curierat. Dacă ambalajul este vizibil deteriorat, fotografiază-l înainte de deschidere. Drepturile tale legale rămân aplicabile.'],
   ['Contact|Contact','Pentru întrebări despre livrare, scrie-ne pe WhatsApp sau la ilariailariaaa8@gmail.com.']
-];
-const faqEnglish = [
-  [
-    'Choose a design tier, shape and length, enter your measurements, then complete the checkout details. Send the prepared WhatsApp message so we can confirm the design, availability, timings, shipping and payment. Your order is confirmed once we agree the details with you.',
-    'You can browse and submit an order request without creating an account.',
-    'Yes. Request custom colours, shapes, lengths, finishes or details. Describe your idea in the form or get in touch on WhatsApp. We confirm the design before production.',
-    'We can discuss changes on WhatsApp before confirmation. Some changes may be unavailable once production starts.'
-  ], [
-    'Each handmade set comes with a mini nail file, wooden cuticle stick and application instructions. The set comes without glue or adhesive tabs. I find the mini nail glues sold in stores less reliable, so I recommend KISS. You can buy it yourself or add it to your order for 20 lei. One full-size bottle lasts for multiple applications.',
-    'We offer XS, S, M and L. Consult the Size Guide and contact us on WhatsApp if you need help.',
-    'You can add a full-size bottle of KISS nail glue to your order for 20 lei. Follow the manufacturer’s instructions for application.',
-    'With proper preparation and application, they can last over a month. Wear time depends on technique, adhesive and day-to-day activity. Follow the application instructions included in the set.',
-    'Mostly yes, that’s why press-on nails are such a great option, but it depends on how they were applied, removed and stored. Remove the nails gently and check the condition of each one before reuse.',
-    'Each set is handmade, so small variations in colour, placement and finish are possible. Colours can also vary with your screen and lighting.'
-  ], [
-    'We currently ship within Romania. Follow us on social media for future shipping updates.',
-    'The cost depends on the destination and delivery method. We confirm it on WhatsApp before accepting the order.',
-    'Allow about 5–7 business days for production plus 1–3 days for courier delivery. We confirm estimates before you accept the order.',
-    'We send payment instructions once your order and delivery details are confirmed. Pay by bank transfer or another agreed method. Production starts when payment arrives unless otherwise agreed.',
-    'When the chosen delivery service offers tracking, we share the details after dispatch.'
-  ], [
-    'Online purchases generally have a 14-day withdrawal period starting on receipt. Goods made to the customer’s specifications or clearly personalised may be exempt. Contact us for details about your order.',
-    'Get in touch as soon as possible by WhatsApp or email. Include your order details and relevant photos. We will help resolve the issue in line with your consumer rights.',
-    'Find us on WhatsApp, by email at ilariailariaaa8@gmail.com, or on TikTok @clawsbyalix.'
-  ]
 ];
 const shippingEnglish = [
   'We ship within Romania. International delivery may be available in the future.',
