@@ -1,5 +1,5 @@
 const shop = {
-  whatsapp: '',
+  whatsapp: '40754552481',
   leiPerEuro: 5,
   shipping: { pickup: 11.5, address: 19.5 },
   tiers: [

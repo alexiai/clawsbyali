@@ -14,9 +14,8 @@ const items = [];
 const drafts = new Map();
 let delivery = { method: 'pickup' };
 let currentPhoto = 0;
-let timer;
 let statusTimer;
-let paused = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let preferredSizing = 'measure';
 const nav = [['home','Acasă|Home'],['custom','Seturi la comandă|Custom sets'],['nails','Seturi gata făcute|Nail sets'],['sizing','Ghid de mărimi|Sizing'],['faq','Întrebări frecvente|FAQ'],['shipping','Livrare|Shipping'],['contact','Contact']];
 const homeSections = new Set(['home', 'custom', 'nails', 'home-links', 'contact']);
 const glueCost = 20;
@@ -53,7 +52,7 @@ function updateNav() {
   });
   const shippingDetails = $('#shipping details');
   if (page === 'shipping') shippingDetails.open = true;
-  all('#nav a').forEach(link => {
+  all('#nav a, #desktop-nav a').forEach(link => {
     if (link.dataset.page === page) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
   });
@@ -61,6 +60,7 @@ function updateNav() {
 function navigate(id) {
   if (currentPage() !== id || location.hash) history.pushState(null, '', urlFor(id));
   setMenu(false);
+  $('.desktop-preferences').open = false;
   updateNav();
   window.scrollTo({top: 0, behavior: 'instant'});
 }
@@ -71,18 +71,10 @@ function syncPhoto() {
   $('#prev-photo').src = 'assets/' + photo(-1)[0] + '.jpg';
   $('#next-photo').src = 'assets/' + photo(1)[0] + '.jpg';
   $('#slide-count').textContent = (currentPhoto + 1) + ' / ' + shop.photos.length;
-  $('#pause').textContent = paused ? '▶' : 'Ⅱ';
-  $('#pause').setAttribute('aria-label', paused ? t('Pornește caruselul|Play carousel') : t('Oprește caruselul|Pause carousel'));
 }
 function cyclePhoto(direction) {
   currentPhoto = (currentPhoto + direction + shop.photos.length) % shop.photos.length;
   syncPhoto();
-}
-function restartCarousel() {
-  clearInterval(timer);
-  if (!paused) timer = setInterval(() => {
-    if (!document.hidden && !dialog.open && !$('.editorial').matches(':focus-within, :hover')) cyclePhoto(1);
-  }, 4800);
 }
 function accordion(question, answer) {
   const node = el('details');
@@ -94,11 +86,11 @@ function renderContent() {
   all('[data-copy]').forEach(node => { node.textContent = t(node.dataset.copy); });
   all('[data-lang]').forEach(node => node.setAttribute('aria-pressed', node.dataset.lang === language));
   all('[data-currency]').forEach(node => node.setAttribute('aria-pressed', node.dataset.currency === currency));
-  $('#previous').setAttribute('aria-label', t('Fotografia anterioară|Previous photo'));
-  $('#next').setAttribute('aria-label', t('Fotografia următoare|Next photo'));
+  all('[data-label]').forEach(node => node.setAttribute('aria-label', t(node.dataset.label)));
+  $('#locale-summary').textContent = currency + ' / ' + language.toUpperCase();
   $('#menu').setAttribute('aria-label', $('#menu-panel').hidden ? t('Meniu|Menu') : t('Închide meniul|Close menu'));
   $('#close').setAttribute('aria-label', t('Închide|Close'));
-  $('#nav').replaceChildren(...nav.map(([id, name]) => {
+  for (const selector of ['#nav', '#desktop-nav']) $(selector).replaceChildren(...nav.map(([id, name]) => {
     const link = el('a',t(name));
     link.href = urlFor(id);
     link.dataset.page = id;
@@ -109,7 +101,7 @@ function renderContent() {
   $('#tiers').replaceChildren(...shop.tiers.map(([name, cost, flower], index) => {
     const button = el('button');
     button.className = 'tier';
-    button.innerHTML = '<img loading="lazy" src="assets/' + flower + '.jpg" alt=""><span class="arrow" aria-hidden="true">↗</span><strong>' + t(name) + '</strong><span>' + price(cost) + '</span>';
+    button.innerHTML = '<span class="tier-art"><img loading="lazy" src="assets/' + flower + '.jpg" alt=""><strong>' + t(name) + '</strong></span><span class="tier-price">' + price(cost) + '</span>';
     button.onclick = () => configure(index);
     return button;
   }));
@@ -144,14 +136,25 @@ function configure(index) {
   const kit = index === -1;
   const [name, cost] = kit ? ['Sizing kit',10] : shop.tiers[index];
   const draft = drafts.get(index) || {};
+  const sizing = draft.sizing || preferredSizing;
+  const sizingChoice = '<label>' + t('Metoda de măsurare|Sizing method') + '<select name="sizing"><option value="measure">' + t('Introduc măsurătorile mele|Enter my measurements') + '</option><option value="kit"' + (sizing === 'kit' ? ' selected' : '') + '>' + t('Comand un sizing kit|Order a sizing kit') + ' · +' + price(10) + '</option></select></label>';
   const glueChoice = '<label class="add-on"><input type="checkbox" name="glue"' + (draft.glue ? ' checked' : '') + '>' + t('Adaugă adeziv KISS|Add KISS nail glue') + ' · ' + price(glueCost) + '</label>';
   showDialog(t(name) + ' · ' + price(cost), '<form id="configure"><p class="notice">' + t('Site-ul pregătește cererea pentru WhatsApp. Stabilim acolo designul, costul final și plata.|The site prepares your request for WhatsApp. We confirm the design, final price and payment there.') + '</p><div class="pair"><label>' + t('Formă|Shape') + '<select name="shape" required><option value="">—</option>' + optionList(shapes,draft.shape) + '</select></label><label>' + t('Lungime|Length') + '<select name="length" required><option value="">—</option>' + optionList(lengths,draft.length) + '</select></label></div>' + (kit ? '' :
-    '<label>' + t('Descrie designul dorit|Describe your design') + '<textarea name="description" rows="3" maxlength="700" required placeholder="' + t('Culori, finisaj, detalii sau idei…|Colours, finish, details or ideas…') + '">' + escape(draft.description || '') + '</textarea></label><p class="notice">' + t('Dacă încă nu ai un model exact, alege categoria cea mai apropiată și scrie-ne ce ți-ar plăcea. Putem discuta și pe|If you are still exploring, choose the closest tier and tell us what you like. You can also reach out on') + ' <a class="text-link" href="https://www.tiktok.com/@clawsbyalix" target="_blank" rel="noopener">TikTok</a>.</p><label>' + t('Fotografii de referință (opțional)|Reference photos (optional)') + '<input type="file" accept="image/*" multiple id="refs"></label><p id="file-list" class="notice"></p><p class="notice">' + t('Pozele selectate se păstrează în această sesiune. Le vei atașa în conversația WhatsApp.|Selected photos stay in this session. Attach them in your WhatsApp conversation.') + '</p><div class="inline"><strong>' + t('Lățimea fiecărei unghii în mm|Width of each nail in mm') + '</strong><a class="text-link" href="?page=sizing" data-page="sizing" id="open-guide">' + t('Vezi ghidul|See size guide') + '</a></div><div class="hands">' + hand(0,draft) + hand(1,draft) + '</div>' + glueChoice) + '<button class="action" type="submit">' + t('Adaugă în coș|Add to bag') + ' ↗</button></form>');
+    '<label>' + t('Descrie designul dorit|Describe your design') + '<textarea name="description" rows="3" maxlength="700" required placeholder="' + t('Culori, finisaj, detalii sau idei…|Colours, finish, details or ideas…') + '">' + escape(draft.description || '') + '</textarea></label><p class="notice">' + t('Dacă încă nu ai un model exact, alege categoria cea mai apropiată și scrie-ne ce ți-ar plăcea. Putem discuta și pe|If you are still exploring, choose the closest tier and tell us what you like. You can also reach out on') + ' <a class="text-link" href="https://www.tiktok.com/@clawsbyalix" target="_blank" rel="noopener">TikTok</a>.</p><label>' + t('Fotografii de referință (opțional)|Reference photos (optional)') + '<input type="file" accept="image/*" multiple id="refs"></label><p id="file-list" class="notice"></p><p class="notice">' + t('Pozele selectate se păstrează în această sesiune. Le vei atașa în conversația WhatsApp.|Selected photos stay in this session. Attach them in your WhatsApp conversation.') + '</p>' + sizingChoice + '<div id="measurement-fields"><div class="inline"><strong>' + t('Lățimea fiecărei unghii în mm|Width of each nail in mm') + '</strong><a class="text-link" href="?page=sizing" data-page="sizing" id="open-guide">' + t('Vezi ghidul|See size guide') + '</a></div><div class="hands">' + hand(0,draft) + hand(1,draft) + '</div></div><p class="notice" id="kit-note" hidden>' + t('Îți trimitem întâi kitul în forma și lungimea alese. Ne comunici mărimile pe WhatsApp înainte să realizăm setul.|We’ll send the kit in your chosen shape and length first. Share your sizes on WhatsApp before we make the set.') + '</p>' + glueChoice) + '<button class="action" type="submit">' + t('Adaugă în coș|Add to bag') + ' ↗</button></form>');
   const form = $('#configure');
   let files = draft.files || [];
-  const saveDraft = () => drafts.set(index, {...Object.fromEntries(new FormData(form)), files});
+  const saveDraft = () => drafts.set(index, {...Object.fromEntries(new FormData(form)), ...(kit ? {} : Object.fromEntries([...form.querySelectorAll('#measurement-fields input')].map(input => [input.name, input.value]))), files});
   form.addEventListener('input', saveDraft);
   if (!kit) {
+    const measurementFields = $('#measurement-fields');
+    const updateSizing = () => {
+      const wantsKit = form.elements.sizing.value === 'kit';
+      measurementFields.hidden = wantsKit;
+      $('#kit-note').hidden = !wantsKit;
+      measurementFields.querySelectorAll('input').forEach(input => { input.disabled = wantsKit; });
+    };
+    form.elements.sizing.addEventListener('change', updateSizing);
+    updateSizing();
     const list = () => { $('#file-list').textContent = files.map(file => file.name).join(', '); };
     list();
     $('#refs').onchange = event => {
@@ -181,8 +184,10 @@ function updateCount() {
   $('#count').textContent = items.length;
 }
 function itemVariant(item) {
-  const variant = t(shapes[item.fields.shape]) + ' · ' + t(lengths[item.fields.length]);
-  return item.fields.glue ? variant + ' · ' + t('Adeziv KISS|KISS nail glue') + ' (+' + price(glueCost) + ')' : variant;
+  const parts = [t(shapes[item.fields.shape]), t(lengths[item.fields.length])];
+  if (item.fields.sizing === 'kit') parts.push('Sizing kit (+' + price(10) + ')');
+  if (item.fields.glue) parts.push(t('Adeziv KISS|KISS nail glue') + ' (+' + price(glueCost) + ')');
+  return parts.join(' · ');
 }
 function orderMessage() {
   const lines = [t('Bună! Aș vrea să trimit o cerere pentru Claws by Ali.|Hi! I would like to send an order request to Claws by Ali.'), ''];
@@ -190,7 +195,8 @@ function orderMessage() {
     lines.push((index + 1) + '. ' + t(item.name) + ' · ' + price(item.cost) + ' · ' + itemVariant(item));
     if (item.index !== -1) {
       lines.push(item.fields.description.trim());
-      sides.forEach((side, sideIndex) => lines.push(t(side) + ': ' + fingers.map((finger, fingerIndex) => t(finger) + ' ' + item.fields['finger-' + sideIndex + '-' + fingerIndex] + ' mm').join(', ')));
+      if (item.fields.sizing === 'kit') lines.push(t('Trimite kitul întâi. Mărimile vor fi comunicate pe WhatsApp.|Send the sizing kit first. Measurements will follow on WhatsApp.'));
+      else sides.forEach((side, sideIndex) => lines.push(t(side) + ': ' + fingers.map((finger, fingerIndex) => t(finger) + ' ' + item.fields['finger-' + sideIndex + '-' + fingerIndex] + ' mm').join(', ')));
       if (item.files.length) lines.push(t('Fotografii de atașat: |Photos to attach: ') + item.files.map(file => file.name).join(', '));
     }
     lines.push('');
@@ -201,7 +207,7 @@ function orderMessage() {
   if (currency === 'EUR') lines.push(t('Prețuri orientative în EUR. Total estimat în lei: |Indicative EUR prices. Estimated total in RON: ') + (subtotal() + shop.shipping[delivery.method]));
   return lines.join('\n');
 }
-const subtotal = () => items.reduce((sum,item) => sum + item.cost + (item.fields.glue ? glueCost : 0), 0);
+const subtotal = () => items.reduce((sum,item) => sum + item.cost + (item.fields.glue ? glueCost : 0) + (item.fields.sizing === 'kit' ? 10 : 0), 0);
 const methodName = (method) => method === 'pickup' ? 'Cargus SHIP & GO' : t('Cargus la adresă|Cargus to your address');
 function checkout() {
   const title = t('Coșul tău|Your bag');
@@ -238,7 +244,8 @@ function checkout() {
     readDelivery();
     const message = orderMessage();
     const photos = items.flatMap(item => item.files);
-    if (shop.whatsapp) window.open('https://wa.me/' + shop.whatsapp + '?text=' + encodeURIComponent(message), '_blank', 'noopener,noreferrer');
+    const whatsappUrl = shop.whatsapp && ('https://wa.me/' + shop.whatsapp + '?text=' + encodeURIComponent(message));
+    if (whatsappUrl) window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
     const output = $('#request-output');
     output.replaceChildren(el('p', shop.whatsapp ? t('Trimite mesajul în conversație și atașează acolo fotografiile alese.|Send the message in the chat and attach your selected photos there.') : t('Numărul de WhatsApp al atelierului nu este configurat. Poți copia cererea sau o poți deschide în aplicația de e-mail.|The studio’s WhatsApp number has not been configured. You can copy the request or open it in your email app.')));
     const preview = el('textarea');
@@ -263,6 +270,14 @@ function checkout() {
     email.className = 'text-link';
     const actions = el('div');
     actions.className = 'inline';
+    if (whatsappUrl) {
+      const whatsapp = el('a', t('Deschide WhatsApp|Open WhatsApp'));
+      whatsapp.href = whatsappUrl;
+      whatsapp.target = '_blank';
+      whatsapp.rel = 'noopener noreferrer';
+      whatsapp.className = 'text-link';
+      actions.append(whatsapp);
+    }
     actions.append(copy,email);
     output.append(preview,actions);
     if (photos.length) output.append(el('p', t('De atașat: |To attach: ') + photos.map(file => file.name).join(', ')));
@@ -284,9 +299,35 @@ $('#bag').onclick = checkout;
 $('#kit').onclick = () => configure(-1);
 $('#close').onclick = () => dialog.close();
 dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
-$('#previous').onclick = () => { cyclePhoto(-1); restartCarousel(); };
-$('#next').onclick = () => { cyclePhoto(1); restartCarousel(); };
-$('#pause').onclick = () => { paused = !paused; syncPhoto(); restartCarousel(); };
+$('#manual-sizing').onclick = () => { preferredSizing = 'measure'; };
+$('#kit-sizing').onclick = () => { preferredSizing = 'kit'; };
+const carousel = $('.editorial');
+let drag;
+carousel.addEventListener('pointerdown', event => {
+  if (!event.isPrimary || event.button !== 0) return;
+  drag = { id: event.pointerId, start: event.clientX };
+  carousel.setPointerCapture(event.pointerId);
+  carousel.classList.add('dragging');
+});
+carousel.addEventListener('pointermove', event => {
+  if (drag?.id === event.pointerId) carousel.style.setProperty('--drag-x', (event.clientX - drag.start) * .6 + 'px');
+});
+function finishDrag(event) {
+  if (drag?.id !== event.pointerId) return;
+  const distance = event.clientX - drag.start;
+  drag = undefined;
+  carousel.classList.remove('dragging');
+  carousel.style.removeProperty('--drag-x');
+  if (event.type === 'pointerup' && Math.abs(distance) >= 36) cyclePhoto(distance < 0 ? 1 : -1);
+}
+carousel.addEventListener('pointerup', finishDrag);
+carousel.addEventListener('pointercancel', finishDrag);
+carousel.addEventListener('lostpointercapture', finishDrag);
+carousel.addEventListener('keydown', event => {
+  if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+  event.preventDefault();
+  cyclePhoto(event.key === 'ArrowRight' ? 1 : -1);
+});
 window.addEventListener('hashchange', updateNav);
 window.addEventListener('popstate', updateNav);
 window.addEventListener('keydown', event => { if (event.key === 'Escape' && !$('#menu-panel').hidden) { setMenu(false); $('#menu').focus(); } });
@@ -301,7 +342,7 @@ all('[data-currency]').forEach(button => { button.onclick = () => {
   renderContent();
 }; });
 renderContent();
-restartCarousel();
+
 })();
 
 
