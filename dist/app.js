@@ -178,7 +178,7 @@ function configure(index) {
     optionButtons('length', 'Lungime|Length', lengths.map((value, i) => [i,value]), draft.length);
   const glueChoice = '<label class="add-on"><input type="checkbox" name="glue"' + (draft.glue ? ' checked' : '') + '>' + t('Adaugă adeziv KISS|Add KISS nail glue') + ' · ' + price(glueCost) + '</label>';
   const markup = '<form id="configure">' + variants + (kit ? '' :
-    '<label>' + t('Descrie designul dorit|Describe your design') + '<textarea name="description" rows="3" maxlength="700" required placeholder="' + t('Culori, finisaj, detalii sau idei…|Colours, finish, details or ideas…') + '">' + escape(draft.description || '') + '</textarea></label><p class="notice">' + t('Dacă încă nu ai un model exact, alege categoria cea mai apropiată și scrie-ne ce ți-ar plăcea. Putem discuta și pe|If you are still exploring, choose the closest tier and tell us what you like. You can also reach out on') + ' <a class="text-link" href="https://www.tiktok.com/@clawsbyalix" target="_blank" rel="noopener">TikTok</a>.</p><label>' + t('Fotografii de referință (opțional)|Reference photos (optional)') + '<input type="file" accept="image/*" multiple id="refs"></label><p id="file-list" class="notice"></p><p class="notice">' + t('Pozele selectate se păstrează în această sesiune. Le vei atașa în conversația WhatsApp.|Selected photos stay in this session. Attach them in your WhatsApp conversation.') + '</p>' + sizingChoice + '<div id="measurement-fields"><div class="inline"><strong>' + t('Lățimea fiecărei unghii în mm|Width of each nail in mm') + '</strong><a class="text-link" href="?page=sizing" data-page="sizing" id="open-guide">' + t('Ai nevoie de ajutor cu măsurătorile?|Need help with sizing?') + '</a></div><div class="hands">' + hand(0,draft) + hand(1,draft) + '</div></div><p class="notice" id="kit-note" hidden>' + t('Îți trimitem întâi kitul în forma și lungimea alese. Ne comunici mărimile pe WhatsApp înainte să realizăm setul.|We’ll send the kit in your chosen shape and length first. Share your sizes on WhatsApp before we make the set.') + '</p>' + glueChoice) + '<button class="action" type="submit">' + t('Adaugă în coș|Add to cart') + ' ↗</button></form>';
+    '<label>' + t('Descrie designul dorit|Describe your design') + '<textarea name="description" rows="3" maxlength="700" required placeholder="' + t('Culori, finisaj, detalii sau idei…|Colours, finish, details or ideas…') + '">' + escape(draft.description || '') + '</textarea></label><p class="notice">' + t('Dacă încă nu ai un model exact, alege categoria cea mai apropiată și scrie-ne ce ți-ar plăcea. Ne poți scrie pe|If you are still exploring, choose the closest tier and tell us what you like. You can also reach out on') + ' <a class="text-link" href="https://www.tiktok.com/@clawsbyalix" target="_blank" rel="noopener">TikTok</a>' + t(' sau poți continua comanda și discutăm pe WhatsApp.| or continue with the order and we will discuss it on WhatsApp.') + '</p><div class="reference-picker"><strong>' + t('Fotografii de referință (opțional)|Reference photos (optional)') + '</strong><label class="photo-picker" for="refs"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="9" r="1.5"/><path d="m5 17 5-4 3 2 4-4 3 3"/></svg>' + t('Alege fotografii|Choose photos') + '</label><input class="sr-only" type="file" accept="image/*" multiple id="refs" aria-label="' + t('Alege fotografii|Choose photos') + '"><ul id="file-list" class="reference-list" aria-live="polite"></ul><p class="notice">' + t('Poți selecta mai multe poze deodată sau le poți adăuga pe rând.|Select multiple photos at once or add them in batches.') + '</p></div>'  + sizingChoice + '<div id="measurement-fields"><div class="inline"><strong>' + t('Lățimea fiecărei unghii în mm|Width of each nail in mm') + '</strong><a class="text-link" href="?page=sizing" data-page="sizing" id="open-guide">' + t('Ai nevoie de ajutor cu măsurătorile?|Need help with sizing?') + '</a></div><div class="hands">' + hand(0,draft) + hand(1,draft) + '</div></div><p class="notice" id="kit-note" hidden>' + t('Îți trimitem întâi kitul în forma și lungimea alese. Ne comunici mărimile pe WhatsApp înainte să realizăm setul.|We’ll send the kit in your chosen shape and length first. Share your sizes on WhatsApp before we make the set.') + '</p>' + glueChoice) + '<button class="action" type="submit">' + t('Adaugă în coș|Add to cart') + ' ↗</button></form>';
   if (kit) {
     showDialog(t(name) + ' · ' + price(cost), markup);
   } else {
@@ -202,11 +202,32 @@ function configure(index) {
     };
     form.querySelectorAll('[name=sizing]').forEach(input => input.addEventListener('change', updateSizing));
     updateSizing();
-    const list = () => { $('#file-list').textContent = files.map(file => file.name).join(', '); };
-    list();
+    function listFiles() {
+      $('#file-list').replaceChildren(...files.map((file, index) => {
+        const row = el('li');
+        const remove = el('button', '×');
+        remove.type = 'button';
+        remove.setAttribute('aria-label', t('Elimină |Remove ') + file.name);
+        remove.onclick = () => {
+          files = files.filter((_, i) => i !== index);
+          listFiles();
+          saveDraft();
+          $('#refs').focus();
+        };
+        row.append(el('span', file.name), remove);
+        return row;
+      }));
+    }
+    listFiles();
     $('#refs').onchange = event => {
-      files = [...event.target.files].filter(file => file.type.startsWith('image/'));
-      list();
+      for (const file of event.target.files) {
+        if ((file.type.startsWith('image/') || /\.(heic|heif|jpe?g|png|webp|gif|avif)$/i.test(file.name)) &&
+          !files.some(existing => existing.name === file.name && existing.size === file.size && existing.lastModified === file.lastModified)) {
+          files = [...files, file];
+        }
+      }
+      event.target.value = '';
+      listFiles();
       saveDraft();
     };
     $('#open-guide').onclick = saveDraft;
@@ -265,8 +286,9 @@ function checkout() {
     $('#browse').onclick = () => dialog.close();
     return;
   }
+  const photos = items.flatMap(item => item.files);
   const field = (name, label, type, autocomplete) => '<label>' + t(label) + '<input maxlength="160" required type="' + type + '" name="' + name + '" autocomplete="' + autocomplete + '" value="' + escape(delivery[name] || '') + '"></label>';
-  showDialog(title, items.map((item, index) => '<div class="line-item"><div><strong>' + t(item.name) + ' · ' + price(item.cost) + '</strong><small>' + itemVariant(item) + '</small></div><button type="button" class="text-link" data-remove="' + index + '">' + t('Elimină|Remove') + '</button></div>').join('') + '<form id="checkout"><dl class="totals"><div><dt>' + t('Subtotal|Subtotal') + '</dt><dd>' + price(subtotal()) + '</dd></div><div><dt>' + t('Transport estimat|Estimated shipping') + '</dt><dd id="shipping-price"></dd></div><div><dt><strong>' + t('Total estimat|Estimated total') + '</strong></dt><dd id="total"></dd></div></dl><p class="notice">' + t('Costul final se confirmă pe WhatsApp. Realizare în 5–7 zile lucrătoare, apoi 1–3 zile pentru transport.|Final cost is confirmed on WhatsApp. Allow 5–7 business days for production and 1–3 days for shipping.') + (currency === 'EUR' ? ' ' + t('Prețurile în EUR sunt orientative (5 lei/€).|EUR prices are indicative (5 RON/€).') : '') + '</p><label>' + t('Metodă de livrare|Delivery method') + '<select name="method"><option value="pickup">' + methodName('pickup') + '</option><option value="address">' + methodName('address') + '</option></select></label>' + deliveryFields(t, delivery, escape) + '<div id="street-address">' + field('address','Adresă completă|Full address','text','street-address') + '</div>' + field('phone','Telefon|Phone number','tel','tel') + '<button class="action" type="submit">' + (shop.whatsapp ? t('Deschide WhatsApp|Open WhatsApp') : t('Pregătește cererea|Prepare request')) + ' ↗</button><div id="request-output"></div></form>', 'cart-drawer');
+  showDialog(title, items.map((item, index) => '<div class="line-item"><div><strong>' + t(item.name) + ' · ' + price(item.cost) + '</strong><small>' + itemVariant(item) + '</small></div><button type="button" class="text-link" data-remove="' + index + '">' + t('Elimină|Remove') + '</button></div>').join('') + '<form id="checkout"><dl class="totals"><div><dt>' + t('Subtotal|Subtotal') + '</dt><dd>' + price(subtotal()) + '</dd></div><div><dt>' + t('Transport estimat|Estimated shipping') + '</dt><dd id="shipping-price"></dd></div><div><dt><strong>' + t('Total estimat|Estimated total') + '</strong></dt><dd id="total"></dd></div></dl><p class="notice">' + t('Costul final se confirmă pe WhatsApp. Realizare în 5–7 zile lucrătoare, apoi 1–3 zile pentru transport.|Final cost is confirmed on WhatsApp. Allow 5–7 business days for production and 1–3 days for shipping.') + (currency === 'EUR' ? ' ' + t('Prețurile în EUR sunt orientative (5 lei/€).|EUR prices are indicative (5 RON/€).') : '') + '</p><label>' + t('Metodă de livrare|Delivery method') + '<select name="method"><option value="pickup">' + methodName('pickup') + '</option><option value="address">' + methodName('address') + '</option></select></label>' + deliveryFields(t, delivery, escape) + '<div id="street-address">' + field('address','Adresă completă|Full address','text','street-address') + '</div>' + field('phone','Telefon|Phone number','tel','tel') + '<button class="action" type="submit">' + (photos.length ? t('Verifică mesajul și fotografiile|Review message and photos') : t('Deschide WhatsApp|Open WhatsApp')) + ' ↗</button><div id="request-output"></div></form>', 'cart-drawer');
   const form = $('#checkout');
   form.elements.method.value = delivery.method;
   const selector = initDeliverySelector(form, t, delivery);
@@ -297,10 +319,11 @@ function checkout() {
     readDelivery();
     if (!selector.complete(delivery)) return;
     const message = orderMessage();
-    const photos = items.flatMap(item => item.files);
     const whatsappUrl = shop.whatsapp && ('https://wa.me/' + shop.whatsapp + '?text=' + encodeURIComponent(message));
     const output = $('#request-output');
-    output.replaceChildren(el('p', shop.whatsapp ? t('Trimite mesajul în conversație și atașează acolo fotografiile alese.|Send the message in the chat and attach your selected photos there.') : t('Numărul de WhatsApp al atelierului nu este configurat. Poți copia cererea sau o poți deschide în aplicația de e-mail.|The studio’s WhatsApp number has not been configured. You can copy the request or open it in your email app.')));
+    output.replaceChildren(el('p', photos.length
+      ? t('Partajează fotografiile din meniul dispozitivului sau deschide conversația și atașează-le acolo.|Share photos from your device’s share menu, or open the chat and attach them there.')
+      : t('Trimite mesajul în conversația WhatsApp.|Send the message in the WhatsApp chat.')));
     const preview = el('textarea');
     preview.value = message;
     preview.readOnly = true;
@@ -333,8 +356,44 @@ function checkout() {
     }
     actions.append(copy,email);
     output.append(preview,actions);
-    if (photos.length) output.append(el('p', t('De atașat: |To attach: ') + photos.map(file => file.name).join(', ')));
-    if (whatsappUrl) location.assign(whatsappUrl);
+    if (photos.length) {
+      const shareData = {files: photos, text: message};
+      if (navigator.share && navigator.canShare?.(shareData)) {
+        const share = el('button', t('Partajează fotografiile și mesajul|Share photos and message'));
+        share.type = 'button';
+        share.className = 'action';
+        share.onclick = async () => {
+          try { await navigator.share(shareData); }
+          catch (error) {
+            if (error.name !== 'AbortError') status(t('Deschide WhatsApp și atașează fotografiile din dispozitiv.|Open WhatsApp and attach the photos from your device.'));
+          }
+        };
+        output.prepend(el('p', t('Din meniul de partajare, alege WhatsApp și contactul +40 754 552 481.|In the share menu, choose WhatsApp and the contact +40 754 552 481.')), share);
+      }
+      const downloads = el('ul');
+      downloads.className = 'reference-list';
+      photos.forEach(file => {
+        const row = el('li');
+        const save = el('button', t('Descarcă|Download'));
+        save.type = 'button';
+        save.className = 'text-link';
+        save.onclick = () => {
+          const url = URL.createObjectURL(file);
+          const link = el('a');
+          link.href = url;
+          link.download = file.name;
+          link.click();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+        };
+        row.append(el('span', file.name), save);
+        downloads.append(row);
+      });
+      output.append(downloads);
+      output.tabIndex = -1;
+      output.focus();
+    } else if (whatsappUrl) {
+      location.assign(whatsappUrl);
+    }
   };
 }
 $('#menu').onclick = () => {
@@ -358,47 +417,40 @@ $('#kit-sizing').onclick = () => { preferredSizing = 'kit'; };
 const carousel = $('.editorial');
 const ring = $('.carousel-ring');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-const slots = [-1, 0, 1].map(offset => {
+const photoCards = shop.photos.map(([file]) => {
   const card = el('figure');
-  card.className = 'photo photo-slot';
-  const layers = [0, 1].map(() => {
-    const frame = el('div');
-    frame.className = 'moving-frame';
-    const photoWindow = el('div');
-    photoWindow.className = 'slot-window';
-    const image = el('img');
-    image.alt = '';
-    photoWindow.append(image);
-    frame.append(photoWindow);
-    card.append(frame);
-    return {frame, image};
-  });
-  return {offset, card, layers};
+  card.className = 'carousel-card';
+  const photoWindow = el('div');
+  photoWindow.className = 'slot-window';
+  const image = el('img');
+  image.src = 'assets/' + file + '.jpg';
+  image.alt = '';
+  image.classList.toggle('landscape-tiger', file === 'tiger');
+  photoWindow.append(image);
+  card.append(photoWindow);
+  return {card, image};
 });
-ring.replaceChildren(...slots.map(slot => slot.card));
+ring.replaceChildren(...photoCards.map(({card}) => card));
 let frame;
 let drag;
+
 function drawCarousel() {
-  const count = shop.photos.length;
-  const indexFor = step => ((step % count) + count) % count;
-  const base = Math.floor(carouselPosition);
-  const progress = carouselPosition - base;
-  const active = indexFor(Math.round(carouselPosition));
-  slots.forEach(({offset, card, layers}) => {
-    const from = base + offset;
-    layers.forEach(({frame, image}, layer) => {
-      const photo = shop.photos[indexFor(from + layer)][0];
-      const file = 'assets/' + photo + '.jpg';
-      image.classList.toggle('landscape-tiger', photo === 'tiger');
-      if (image.getAttribute('src') !== file) image.src = file;
-      const phase = layer - progress;
-      frame.style.setProperty('--shift', (phase * 26).toFixed(2) + '%');
-      frame.style.setProperty('--dip', (Math.abs(phase) * 9).toFixed(2) + '%');
-      frame.style.setProperty('--turn', (phase * 11).toFixed(2) + 'deg');
-      frame.style.opacity = layer === 0 ? 1 : progress;
-    });
-    card.setAttribute('aria-hidden', offset !== 0);
-    layers[0].image.alt = offset === 0 ? t(shop.photos[active][1]) : '';
+  const count = photoCards.length;
+  const normalized = ((carouselPosition % count) + count) % count;
+  const active = Math.round(normalized) % count;
+  photoCards.forEach(({card, image}, index) => {
+    const offset = ((index - normalized + count * 1.5) % count) - count / 2;
+    const distance = Math.abs(offset);
+    const angle = offset * 2 * Math.PI / count;
+    const depth = Math.cos(angle);
+    card.style.setProperty('--orbit-x', Math.sin(angle).toFixed(5));
+    card.style.setProperty('--orbit-depth', (1 - depth).toFixed(5));
+    card.style.setProperty('--orbit-tilt', (Math.sin(angle) * 22).toFixed(2) + 'deg');
+    card.style.setProperty('--orbit-scale', (.82 + depth * .18).toFixed(5));
+    card.style.opacity = Math.min(1, Math.max(0, (1.5 - distance) * 2));
+    card.style.zIndex = String(100 + Math.round(depth * 50));
+    card.setAttribute('aria-hidden', index !== active);
+    image.alt = index === active ? t(shop.photos[index][1]) : '';
   });
   const countLabel = (active + 1) + ' / ' + count;
   if ($('#slide-count').textContent !== countLabel) $('#slide-count').textContent = countLabel;
