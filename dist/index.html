@@ -8,7 +8,7 @@
 <body>
 <header class="site-header"><div class="header-inner">
 <button id="menu" type="button" aria-controls="menu-panel" aria-expanded="false" aria-label="Menu"><span class="hamburger" aria-hidden="true"></span></button>
-<a href="./" data-page="home" class="brand" aria-label="Claws by Ali"><img src="assets/ca.svg" alt=""><span>Claws by Ali</span></a>
+<a href="./" data-page="home" class="brand" aria-label="Claws by Ali"><span class="ca-mark" aria-hidden="true"><i></i><i></i></span><span>Claws by Ali</span></a>
 <nav id="desktop-nav" aria-label="Main menu"></nav>
 <details class="desktop-preferences"><summary id="locale-summary">RON / EN</summary><div class="preferences"><div aria-label="Language"><button data-lang="en">EN</button><button data-lang="ro">RO</button></div><div aria-label="Currency"><button data-currency="RON">LEI</button><button data-currency="EUR">EUR</button></div></div></details>
 <button id="bag" type="button"><span data-copy="Coș|Bag"></span> <span id="count">0</span></button>
@@ -19,17 +19,15 @@
 <main>
 <section id="home" class="hero" aria-labelledby="hero-title">
 <div class="poster">
-<h1 id="hero-title" class="chrome chrome-title"><span class="sr-only">Claws by Ali</span></h1>
+<h1 id="hero-title" class="chrome-title"><span class="sr-only">Claws by Ali</span><span class="chrome chrome-claws" aria-hidden="true"></span><span class="chrome chrome-by" aria-hidden="true"></span></h1>
 <div class="editorial" tabindex="0" role="group" aria-roledescription="carousel" aria-describedby="carousel-help">
-<div class="photo photo-back left"><img alt="" id="prev-photo"></div>
-<div class="photo photo-back right"><img alt="" id="next-photo"></div>
-<figure class="photo hero-photo"><img id="slide" src="assets/strawberry.jpg" alt=""></figure>
-</div>
+<div class="carousel-ring"></div></div>
 <p class="poster-sub chrome"><span class="sr-only">Press on nails</span></p>
 </div>
 <p id="carousel-help" class="sr-only" data-copy="Trage fotografiile sau folosește săgețile stânga și dreapta de pe tastatură.|Drag the photos or use the left and right arrow keys."></p><span id="slide-count" class="sr-only" aria-live="polite"></span>
 </section>
 <section id="custom" class="section"><div class="section-head"><h2 data-copy="Seturi la comandă|Custom sets"></h2><p data-copy="Alege categoria cea mai apropiată de ideea ta. Dacă ai nevoie de ajutor, stabilim detaliile pe WhatsApp sau pe TikTok.|Choose the closest tier for your idea. If you need help, we can refine the details on WhatsApp or TikTok."></p></div><div id="tiers" class="tiers"></div></section>
+<section id="product" class="section product-page" hidden></section>
 <section id="nails" class="ready" aria-labelledby="nails-title"><h2 id="nails-title" class="ready-title" data-copy="Seturi gata de cumpărat|Nail sets ready to buy"></h2><div class="coming-art" role="img" data-label="În curând|Coming soon"></div></section>
 <section id="sizing" class="section sizing"><h2 data-copy="Ghid de mărimi|Size guide"></h2><div class="guide-grid"><article><h3>Sizing kit</h3><p data-copy="Primești mostre de tipsuri în forma și lungimea aleasă. Probează-le pe fiecare deget și notează mărimile pentru următoarea comandă.|Try sample tips in your chosen shape and length. Record the best fit for each finger for your next order."></p><button class="action" id="kit"></button> <a class="text-link" id="kit-sizing" href="?page=custom" data-page="custom" data-copy="Alege un set cu sizing kit ↗|Choose a custom set with a sizing kit ↗"></a></article><article><h3 data-copy="Măsoară acasă|Measure at home"></h3><ol id="size-steps"></ol><a id="manual-sizing" class="text-link" href="?page=custom" data-page="custom" data-copy="Folosește măsurătorile mele ↗|Use my measurements ↗"></a><img src="assets/measure.jpg" alt="" loading="lazy"></article></div><details><summary data-copy="Tabel orientativ de mărimi|Reference size chart"></summary><div id="size-table"></div></details></section>
 <section id="faq" class="section faq"><h2 data-copy="Întrebări frecvente|Frequently asked questions"></h2><div id="questions"></div></section>

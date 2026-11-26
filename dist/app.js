@@ -13,7 +13,7 @@ let currency = localStorage.getItem('claws-currency') === 'EUR' ? 'EUR' : 'RON';
 const items = [];
 const drafts = new Map();
 let delivery = { method: 'pickup' };
-let currentPhoto = 0;
+let carouselPosition = 0;
 let statusTimer;
 let preferredSizing = 'measure';
 const nav = [['home','Acasă|Home'],['custom','Seturi la comandă|Custom sets'],['nails','Seturi gata făcute|Nail sets'],['sizing','Ghid de mărimi|Sizing'],['faq','Întrebări frecvente|FAQ'],['shipping','Livrare|Shipping'],['contact','Contact']];
@@ -41,19 +41,26 @@ function setMenu(open) {
 }
 function currentPage() {
   const requested = new URLSearchParams(location.search).get('page') || location.hash.slice(1);
+  if (requested === 'product' && productIndex() >= 0) return 'product';
   return nav.some(([id]) => id === requested) ? requested : 'home';
+}
+function productIndex() {
+  const key = new URLSearchParams(location.search).get('set');
+  return shop.tiers.findIndex(tier => tier[2] === key);
 }
 function updateNav() {
   const page = currentPage();
   document.body.dataset.page = page;
-  document.title = page === 'home' ? 'Claws by Ali — Press-on nails' : t(nav.find(([id]) => id === page)[1]) + ' — Claws by Ali';
+  document.title = page === 'product' ? t(shop.tiers[productIndex()][0]) + ' — Claws by Ali' : page === 'home' ? 'Claws by Ali — Press-on nails' : t(nav.find(([id]) => id === page)[1]) + ' — Claws by Ali';
   all('main > [id]').forEach(section => {
     section.hidden = page === 'home' ? !homeSections.has(section.id) : section.id !== page;
   });
+  if (page === 'product') configure(productIndex());
+  else $('#product').replaceChildren();
   const shippingDetails = $('#shipping details');
   if (page === 'shipping') shippingDetails.open = true;
   all('#nav a, #desktop-nav a').forEach(link => {
-    if (link.dataset.page === page) link.setAttribute('aria-current', 'page');
+    if (link.dataset.page === page || (page === 'product' && link.dataset.page === 'custom')) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
   });
 }
@@ -63,18 +70,6 @@ function navigate(id) {
   $('.desktop-preferences').open = false;
   updateNav();
   window.scrollTo({top: 0, behavior: 'instant'});
-}
-function syncPhoto() {
-  const photo = (offset) => shop.photos[(currentPhoto + offset + shop.photos.length) % shop.photos.length];
-  $('#slide').src = 'assets/' + photo(0)[0] + '.jpg';
-  $('#slide').alt = t(photo(0)[1]);
-  $('#prev-photo').src = 'assets/' + photo(-1)[0] + '.jpg';
-  $('#next-photo').src = 'assets/' + photo(1)[0] + '.jpg';
-  $('#slide-count').textContent = (currentPhoto + 1) + ' / ' + shop.photos.length;
-}
-function cyclePhoto(direction) {
-  currentPhoto = (currentPhoto + direction + shop.photos.length) % shop.photos.length;
-  syncPhoto();
 }
 function accordion(question, answer) {
   const node = el('details');
@@ -97,12 +92,20 @@ function renderContent() {
     return link;
   }));
   updateNav();
-  syncPhoto();
-  $('#tiers').replaceChildren(...shop.tiers.map(([name, cost, flower], index) => {
-    const button = el('button');
+  drawCarousel();
+  $('#tiers').replaceChildren(...shop.tiers.map(([name, cost, flower]) => {
+    const button = el('a');
     button.className = 'tier';
+    button.href = '?page=product&set=' + flower;
     button.innerHTML = '<span class="tier-art"><img loading="lazy" src="assets/' + flower + '.jpg" alt=""><strong>' + t(name) + '</strong></span><span class="tier-price">' + price(cost) + '</span>';
-    button.onclick = () => configure(index);
+    button.onclick = event => {
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      history.pushState(null, '', button.href);
+      updateNav();
+      window.scrollTo({top: 0, behavior: 'instant'});
+      $('#product-title').focus({preventScroll:true});
+    };
     return button;
   }));
   $('#kit').textContent = t('Alege sizing kit |Choose sizing kit ') + '· ' + price(10);
@@ -117,14 +120,18 @@ function renderContent() {
   const lastUpdated = new Intl.DateTimeFormat(language === 'ro' ? 'ro-RO' : 'en-GB', {dateStyle:'long',timeZone:'UTC'}).format(new Date('2026-11-26'));
   $('#policy').replaceChildren(el('p', t('Actualizată la |Last updated ') + lastUpdated), ...shippingPolicy.flatMap(([title, body], index) => [el('h3', (index + 1) + '. ' + t(title)), el('p', language === 'en' ? shippingEnglish[index] : body)]));
 }
-function showDialog(title, markup) {
+function showDialog(title, markup, mode = '') {
+  dialog.className = mode;
   $('#dialog-title').textContent = title;
   dialogBody.innerHTML = markup;
   if (!dialog.open) dialog.showModal();
   dialog.scrollTop = 0;
 }
-function optionList(values, current) {
-  return values.map((value, index) => '<option value="' + index + '"' + (String(index) === current ? ' selected' : '') + '>' + t(value) + '</option>').join('');
+function optionButtons(name, label, options, selected) {
+  return '<fieldset class="product-choices"><legend>' + t(label) + '</legend><div>' + options.map(([value, text]) =>
+    '<label><input type="radio" name="' + name + '" value="' + value + '" required' +
+    (String(value) === selected ? ' checked' : '') + '><span>' + t(text) + '</span></label>'
+  ).join('') + '</div></fieldset>';
 }
 function hand(side, draft) {
   return '<fieldset><legend>' + t(sides[side]) + '</legend><svg class="hand" viewBox="0 0 120 106" aria-hidden="true"><path ' + (side ? 'transform="translate(120) scale(-1 1)" ' : '') + 'd="M38 103 Q36 87 23 76 L9 57 Q5 49 10 46 Q15 43 22 49 L31 59 L26 25 Q25 18 31 17 Q37 16 39 23 L44 45 L43 10 Q43 3 49 3 Q55 3 56 10 L59 43 L64 8 Q65 2 71 3 Q77 4 76 11 L73 46 L82 18 Q84 12 90 14 Q95 16 94 23 L88 54 L89 70 Q95 88 81 96 L81 103 Z"/></svg><div class="finger-grid">' + fingers.map((finger, index) => {
@@ -137,11 +144,25 @@ function configure(index) {
   const [name, cost] = kit ? ['Sizing kit',10] : shop.tiers[index];
   const draft = drafts.get(index) || {};
   const sizing = draft.sizing || preferredSizing;
-  const sizingChoice = '<label>' + t('Metoda de măsurare|Sizing method') + '<select name="sizing"><option value="measure">' + t('Introduc măsurătorile mele|Enter my measurements') + '</option><option value="kit"' + (sizing === 'kit' ? ' selected' : '') + '>' + t('Comand un sizing kit|Order a sizing kit') + ' · +' + price(10) + '</option></select></label>';
+  const sizingChoice = optionButtons('sizing', 'Metoda de măsurare|Sizing method', [
+    ['measure', 'Introduc măsurătorile mele|Enter my measurements'],
+    ['kit', t('Comand un sizing kit|Order a sizing kit') + ' · +' + price(10)]
+  ], sizing);
+  const variants = optionButtons('shape', 'Formă|Shape', shapes.map((value, i) => [i,value]), draft.shape) +
+    optionButtons('length', 'Lungime|Length', lengths.map((value, i) => [i,value]), draft.length);
   const glueChoice = '<label class="add-on"><input type="checkbox" name="glue"' + (draft.glue ? ' checked' : '') + '>' + t('Adaugă adeziv KISS|Add KISS nail glue') + ' · ' + price(glueCost) + '</label>';
-  showDialog(t(name) + ' · ' + price(cost), '<form id="configure"><p class="notice">' + t('Site-ul pregătește cererea pentru WhatsApp. Stabilim acolo designul, costul final și plata.|The site prepares your request for WhatsApp. We confirm the design, final price and payment there.') + '</p><div class="pair"><label>' + t('Formă|Shape') + '<select name="shape" required><option value="">—</option>' + optionList(shapes,draft.shape) + '</select></label><label>' + t('Lungime|Length') + '<select name="length" required><option value="">—</option>' + optionList(lengths,draft.length) + '</select></label></div>' + (kit ? '' :
-    '<label>' + t('Descrie designul dorit|Describe your design') + '<textarea name="description" rows="3" maxlength="700" required placeholder="' + t('Culori, finisaj, detalii sau idei…|Colours, finish, details or ideas…') + '">' + escape(draft.description || '') + '</textarea></label><p class="notice">' + t('Dacă încă nu ai un model exact, alege categoria cea mai apropiată și scrie-ne ce ți-ar plăcea. Putem discuta și pe|If you are still exploring, choose the closest tier and tell us what you like. You can also reach out on') + ' <a class="text-link" href="https://www.tiktok.com/@clawsbyalix" target="_blank" rel="noopener">TikTok</a>.</p><label>' + t('Fotografii de referință (opțional)|Reference photos (optional)') + '<input type="file" accept="image/*" multiple id="refs"></label><p id="file-list" class="notice"></p><p class="notice">' + t('Pozele selectate se păstrează în această sesiune. Le vei atașa în conversația WhatsApp.|Selected photos stay in this session. Attach them in your WhatsApp conversation.') + '</p>' + sizingChoice + '<div id="measurement-fields"><div class="inline"><strong>' + t('Lățimea fiecărei unghii în mm|Width of each nail in mm') + '</strong><a class="text-link" href="?page=sizing" data-page="sizing" id="open-guide">' + t('Vezi ghidul|See size guide') + '</a></div><div class="hands">' + hand(0,draft) + hand(1,draft) + '</div></div><p class="notice" id="kit-note" hidden>' + t('Îți trimitem întâi kitul în forma și lungimea alese. Ne comunici mărimile pe WhatsApp înainte să realizăm setul.|We’ll send the kit in your chosen shape and length first. Share your sizes on WhatsApp before we make the set.') + '</p>' + glueChoice) + '<button class="action" type="submit">' + t('Adaugă în coș|Add to bag') + ' ↗</button></form>');
-  const form = $('#configure');
+  const markup = '<form id="configure">' + variants + (kit ? '' :
+    '<label>' + t('Descrie designul dorit|Describe your design') + '<textarea name="description" rows="3" maxlength="700" required placeholder="' + t('Culori, finisaj, detalii sau idei…|Colours, finish, details or ideas…') + '">' + escape(draft.description || '') + '</textarea></label><p class="notice">' + t('Dacă încă nu ai un model exact, alege categoria cea mai apropiată și scrie-ne ce ți-ar plăcea. Putem discuta și pe|If you are still exploring, choose the closest tier and tell us what you like. You can also reach out on') + ' <a class="text-link" href="https://www.tiktok.com/@clawsbyalix" target="_blank" rel="noopener">TikTok</a>.</p><label>' + t('Fotografii de referință (opțional)|Reference photos (optional)') + '<input type="file" accept="image/*" multiple id="refs"></label><p id="file-list" class="notice"></p><p class="notice">' + t('Pozele selectate se păstrează în această sesiune. Le vei atașa în conversația WhatsApp.|Selected photos stay in this session. Attach them in your WhatsApp conversation.') + '</p>' + sizingChoice + '<div id="measurement-fields"><div class="inline"><strong>' + t('Lățimea fiecărei unghii în mm|Width of each nail in mm') + '</strong><a class="text-link" href="?page=sizing" data-page="sizing" id="open-guide">' + t('Ai nevoie de ajutor cu măsurătorile?|Need help with sizing?') + '</a></div><div class="hands">' + hand(0,draft) + hand(1,draft) + '</div></div><p class="notice" id="kit-note" hidden>' + t('Îți trimitem întâi kitul în forma și lungimea alese. Ne comunici mărimile pe WhatsApp înainte să realizăm setul.|We’ll send the kit in your chosen shape and length first. Share your sizes on WhatsApp before we make the set.') + '</p>' + glueChoice) + '<button class="action" type="submit">' + t('Adaugă în coș|Add to bag') + ' ↗</button></form>';
+  if (kit) {
+    showDialog(t(name) + ' · ' + price(cost), markup);
+  } else {
+    const flower = shop.tiers[index][2];
+    $('#product').innerHTML = '<a class="text-link product-back" href="?page=custom" data-page="custom">← ' + t('Seturi la comandă|Custom sets') + '</a>' +
+      '<div class="product-layout"><img class="product-image" src="assets/' + flower + '.jpg" alt=""><article>' +
+      '<h1 tabindex="-1" id="product-title">' + t(name) + '</h1><p class="product-price">' + price(cost) + '</p>' +
+      '<p class="product-description">' + t('Un set lucrat manual cu 10 unghii press-on, creat după ideea ta. Include o pilă mini, un bețișor pentru cuticule și instrucțiuni de aplicare. Confirmăm detaliile pe WhatsApp.|Ten handmade press-on nails designed around your idea, with a mini nail file, cuticle stick and application instructions. We confirm the details on WhatsApp.') + '</p>' + markup + '</article></div>';
+  }
+  const form = (kit ? dialogBody : $('#product')).querySelector('#configure');
   let files = draft.files || [];
   const saveDraft = () => drafts.set(index, {...Object.fromEntries(new FormData(form)), ...(kit ? {} : Object.fromEntries([...form.querySelectorAll('#measurement-fields input')].map(input => [input.name, input.value]))), files});
   form.addEventListener('input', saveDraft);
@@ -153,7 +174,7 @@ function configure(index) {
       $('#kit-note').hidden = !wantsKit;
       measurementFields.querySelectorAll('input').forEach(input => { input.disabled = wantsKit; });
     };
-    form.elements.sizing.addEventListener('change', updateSizing);
+    form.querySelectorAll('[name=sizing]').forEach(input => input.addEventListener('change', updateSizing));
     updateSizing();
     const list = () => { $('#file-list').textContent = files.map(file => file.name).join(', '); };
     list();
@@ -162,7 +183,7 @@ function configure(index) {
       list();
       saveDraft();
     };
-    $('#open-guide').onclick = () => { saveDraft(); dialog.close(); };
+    $('#open-guide').onclick = saveDraft;
   }
   form.onsubmit = (event) => {
     event.preventDefault();
@@ -176,7 +197,9 @@ function configure(index) {
     items.push({index, name, cost, fields, files});
     drafts.delete(index);
     updateCount();
-    dialog.close();
+    if (kit) dialog.close();
+    else configure(index);
+    checkout();
     status(t('Adăugat în coș|Added to your bag'));
   };
 }
@@ -210,14 +233,14 @@ function orderMessage() {
 const subtotal = () => items.reduce((sum,item) => sum + item.cost + (item.fields.glue ? glueCost : 0) + (item.fields.sizing === 'kit' ? 10 : 0), 0);
 const methodName = (method) => method === 'pickup' ? 'Cargus SHIP & GO' : t('Cargus la adresă|Cargus to your address');
 function checkout() {
-  const title = t('Coșul tău|Your bag');
+  const title = t('Coșul tău|Your cart');
   if (!items.length) {
-    showDialog(title, '<p>' + t('Coșul este gol.|Your bag is empty.') + '</p><p><a class="text-link" href="?page=custom" data-page="custom" id="browse">' + t('Explorează seturile|Explore custom sets') + ' ↗</a></p>');
+    showDialog(title, '<div class="empty-cart"><h3>' + t('Coșul tău este gol|Your cart is empty') + '</h3><a class="action" href="?page=custom" data-page="custom" id="browse">' + t('Continuă cumpărăturile|Continue shopping') + '</a></div>', 'empty-cart-drawer');
     $('#browse').onclick = () => dialog.close();
     return;
   }
   const field = (name, label, type, autocomplete) => '<label>' + t(label) + '<input maxlength="160" required type="' + type + '" name="' + name + '" autocomplete="' + autocomplete + '" value="' + escape(delivery[name] || '') + '"></label>';
-  showDialog(title, items.map((item, index) => '<div class="line-item"><div><strong>' + t(item.name) + ' · ' + price(item.cost) + '</strong><small>' + itemVariant(item) + '</small></div><button type="button" class="text-link" data-remove="' + index + '">' + t('Elimină|Remove') + '</button></div>').join('') + '<form id="checkout"><dl class="totals"><div><dt>' + t('Subtotal|Subtotal') + '</dt><dd>' + price(subtotal()) + '</dd></div><div><dt>' + t('Transport estimat|Estimated shipping') + '</dt><dd id="shipping-price"></dd></div><div><dt><strong>' + t('Total estimat|Estimated total') + '</strong></dt><dd id="total"></dd></div></dl><p class="notice">' + t('Costul final se confirmă pe WhatsApp. Realizare în 5–7 zile lucrătoare, apoi 1–3 zile pentru transport.|Final cost is confirmed on WhatsApp. Allow 5–7 business days for production and 1–3 days for shipping.') + (currency === 'EUR' ? ' ' + t('Prețurile în EUR sunt orientative (5 lei/€).|EUR prices are indicative (5 RON/€).') : '') + '</p><label>' + t('Metodă de livrare|Delivery method') + '<select name="method"><option value="pickup">' + methodName('pickup') + '</option><option value="address">' + methodName('address') + '</option></select></label>' + field('city','Localitate și județ|City and county','text','address-level2') + field('address','Adresă completă|Full address','text','street-address') + '<div id="pickup-field">' + field('pickup','Punct SHIP & GO preferat|Preferred SHIP & GO location','text','off') + '</div>' + field('phone','Telefon|Phone number','tel','tel') + '<button class="action" type="submit">' + (shop.whatsapp ? t('Deschide WhatsApp|Open WhatsApp') : t('Pregătește cererea|Prepare request')) + ' ↗</button><div id="request-output"></div></form>');
+  showDialog(title, items.map((item, index) => '<div class="line-item"><div><strong>' + t(item.name) + ' · ' + price(item.cost) + '</strong><small>' + itemVariant(item) + '</small></div><button type="button" class="text-link" data-remove="' + index + '">' + t('Elimină|Remove') + '</button></div>').join('') + '<form id="checkout"><dl class="totals"><div><dt>' + t('Subtotal|Subtotal') + '</dt><dd>' + price(subtotal()) + '</dd></div><div><dt>' + t('Transport estimat|Estimated shipping') + '</dt><dd id="shipping-price"></dd></div><div><dt><strong>' + t('Total estimat|Estimated total') + '</strong></dt><dd id="total"></dd></div></dl><p class="notice">' + t('Costul final se confirmă pe WhatsApp. Realizare în 5–7 zile lucrătoare, apoi 1–3 zile pentru transport.|Final cost is confirmed on WhatsApp. Allow 5–7 business days for production and 1–3 days for shipping.') + (currency === 'EUR' ? ' ' + t('Prețurile în EUR sunt orientative (5 lei/€).|EUR prices are indicative (5 RON/€).') : '') + '</p><label>' + t('Metodă de livrare|Delivery method') + '<select name="method"><option value="pickup">' + methodName('pickup') + '</option><option value="address">' + methodName('address') + '</option></select></label>' + field('city','Localitate și județ|City and county','text','address-level2') + field('address','Adresă completă|Full address','text','street-address') + '<div id="pickup-field">' + field('pickup','Punct SHIP & GO preferat|Preferred SHIP & GO location','text','off') + '</div>' + field('phone','Telefon|Phone number','tel','tel') + '<button class="action" type="submit">' + (shop.whatsapp ? t('Deschide WhatsApp|Open WhatsApp') : t('Pregătește cererea|Prepare request')) + ' ↗</button><div id="request-output"></div></form>', 'cart-drawer');
   const form = $('#checkout');
   form.elements.method.value = delivery.method;
   function updateDelivery() {
@@ -297,28 +320,88 @@ document.addEventListener('click', event => {
 });
 $('#bag').onclick = checkout;
 $('#kit').onclick = () => configure(-1);
+dialog.addEventListener('close', () => { if (!dialog.open) dialogBody.replaceChildren(); });
 $('#close').onclick = () => dialog.close();
 dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
 $('#manual-sizing').onclick = () => { preferredSizing = 'measure'; };
 $('#kit-sizing').onclick = () => { preferredSizing = 'kit'; };
 const carousel = $('.editorial');
+const ring = $('.carousel-ring');
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+const cards = shop.photos.map(([file]) => {
+  const card = el('figure');
+  card.className = 'photo';
+  const image = el('img');
+  image.src = 'assets/' + file + '.jpg';
+  image.alt = '';
+  card.append(image);
+  return card;
+});
+ring.replaceChildren(...cards);
+let frame;
 let drag;
+
+function drawCarousel() {
+  const count = cards.length;
+  const active = ((Math.round(carouselPosition) % count) + count) % count;
+  cards.forEach((card, index) => {
+    const angle = (index - carouselPosition) * 2 * Math.PI / count;
+    const depth = Math.cos(angle);
+    const horizontal = Math.sin(angle);
+    card.style.setProperty('--orbit-x', horizontal.toFixed(4));
+    card.style.setProperty('--orbit-y', ((1 - depth) * .5).toFixed(4));
+    card.style.setProperty('--orbit-scale', (.78 + .22 * depth).toFixed(4));
+    card.style.setProperty('--orbit-turn', (horizontal * 22).toFixed(3) + 'deg');
+    card.style.opacity = Math.max(0, Math.min(1, (depth + .35) * 1.25));
+    card.style.zIndex = 100 + Math.round(95 * depth);
+    card.setAttribute('aria-hidden', index !== active);
+    card.firstElementChild.alt = index === active ? t(shop.photos[index][1]) : '';
+  });
+  const countLabel = (active + 1) + ' / ' + count;
+  if ($('#slide-count').textContent !== countLabel) $('#slide-count').textContent = countLabel;
+}
+
+function settleCarousel(target) {
+  cancelAnimationFrame(frame);
+  const start = carouselPosition;
+  const started = performance.now();
+  const duration = reducedMotion.matches ? 0 : 360 + Math.min(180, Math.abs(target - start) * 90);
+  function tick(now) {
+    const progress = duration ? Math.min(1, (now - started) / duration) : 1;
+    carouselPosition = start + (target - start) * (1 - (1 - progress) ** 3);
+    drawCarousel();
+    if (progress < 1) frame = requestAnimationFrame(tick);
+  }
+  frame = requestAnimationFrame(tick);
+}
+
 carousel.addEventListener('pointerdown', event => {
   if (!event.isPrimary || event.button !== 0) return;
-  drag = { id: event.pointerId, start: event.clientX };
+  cancelAnimationFrame(frame);
+  drag = {
+    id: event.pointerId, startX: event.clientX, lastX: event.clientX,
+    lastTime: performance.now(), velocity: 0, start: carouselPosition,
+    step: Math.max(70, Math.min(240, carousel.clientWidth * .22))
+  };
   carousel.setPointerCapture(event.pointerId);
   carousel.classList.add('dragging');
 });
 carousel.addEventListener('pointermove', event => {
-  if (drag?.id === event.pointerId) carousel.style.setProperty('--drag-x', (event.clientX - drag.start) * .6 + 'px');
+  if (drag?.id !== event.pointerId) return;
+  const now = performance.now();
+  drag.velocity = (drag.velocity + (drag.lastX - event.clientX) / Math.max(8, now - drag.lastTime) / drag.step) / 2;
+  drag.lastTime = now;
+  drag.lastX = event.clientX;
+  carouselPosition = drag.start + (drag.startX - event.clientX) / drag.step;
+  drawCarousel();
 });
 function finishDrag(event) {
   if (drag?.id !== event.pointerId) return;
-  const distance = event.clientX - drag.start;
+  const fling = event.type === 'pointerup' && performance.now() - drag.lastTime < 100
+    ? Math.max(-2, Math.min(2, drag.velocity * 150)) : 0;
   drag = undefined;
   carousel.classList.remove('dragging');
-  carousel.style.removeProperty('--drag-x');
-  if (event.type === 'pointerup' && Math.abs(distance) >= 36) cyclePhoto(distance < 0 ? 1 : -1);
+  settleCarousel(Math.round(carouselPosition + fling));
 }
 carousel.addEventListener('pointerup', finishDrag);
 carousel.addEventListener('pointercancel', finishDrag);
@@ -326,7 +409,7 @@ carousel.addEventListener('lostpointercapture', finishDrag);
 carousel.addEventListener('keydown', event => {
   if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
   event.preventDefault();
-  cyclePhoto(event.key === 'ArrowRight' ? 1 : -1);
+  settleCarousel(Math.round(carouselPosition) + (event.key === 'ArrowRight' ? 1 : -1));
 });
 window.addEventListener('hashchange', updateNav);
 window.addEventListener('popstate', updateNav);
