@@ -36,11 +36,11 @@ const faq = [
     ['Pot modifica cererea?|Can I change my order after submitting the form?', 'Putem discuta modificările pe WhatsApp înainte de confirmare. După începerea lucrului, unele schimbări pot fi imposibile.']
   ]],
   ['Produse și mărimi|Products & Sizing', [
-    ['Ce conține comanda?|What is included in my order?', 'Setul handmade vine cu o pilă mini, un bețișor de lemn pentru cuticule și instrucțiuni de aplicare. Setul vine fără adeziv lichid și fără benzi adezive.'],
+    ['Ce conține comanda?|What is included in my order?', 'Setul handmade vine cu o pilă mini, un bețișor de lemn pentru cuticule și instrucțiuni de aplicare. Adezivul și benzile adezive nu sunt incluse. Adezivele mini din comerț nu oferă fixarea pe care o caut, așa că recomand KISS. Îl poți cumpăra separat sau îl pot adăuga la comandă pentru 20 lei. Flaconul ajunge pentru mai multe aplicări.'],
     ['Cum aleg mărimea?|How do I choose the correct nail size?', 'Avem mărimile XS, S, M și L. Consultă ghidul de mărimi și scrie-ne pe WhatsApp dacă ai nevoie de ajutor.'],
-    ['Includeți lipici?|Do you include nail glue?', 'Setul vine fără adeziv lichid. Poți folosi un adeziv pentru unghii, cum ar fi KISS, conform instrucțiunilor producătorului.'],
+    ['Includeți lipici?|Do you include nail glue?', 'Poți adăuga un flacon de adeziv KISS la comandă pentru 20 lei. Urmează instrucțiunile producătorului la aplicare.'],
     ['Cât rezistă unghiile press-on?|How long do press-on nails last?', 'Cu o pregătire și o aplicare corectă, pot rezista peste o lună. Durata depinde de tehnica de aplicare, adeziv și activitățile zilnice. Urmează instrucțiunile de aplicare din set.'],
-    ['Pot refolosi setul?|Can I reuse my press-on nails?', 'Reutilizarea depinde de modul de aplicare, îndepărtare și depozitare. Îndepărtează-le cu grijă și verifică starea fiecărei unghii.'],
+    ['Pot refolosi setul?|Can I reuse my press-on nails?', 'De cele mai multe ori, da. Acesta e unul dintre avantajele unghiilor press-on, dar depinde de cum le aplici, le îndepărtezi și le depozitezi. Îndepărtează-le cu grijă și verifică starea fiecărei unghii.'],
     ['Seturile arată exact ca în poze?|Are all sets exactly the same as the pictures?', 'Fiecare set este lucrat manual, așa că pot exista mici diferențe de culoare, poziționare sau finisaj. Lumina și ecranul pot schimba aspectul culorilor.']
   ]],
   ['Livrare și plată|Shipping & Payment', [
@@ -76,11 +76,11 @@ const faqEnglish = [
     'Yes. Request custom colours, shapes, lengths, finishes or details. Describe your idea in the form or get in touch on WhatsApp. We confirm the design before production.',
     'We can discuss changes on WhatsApp before confirmation. Some changes may be unavailable once production starts.'
   ], [
-    'Each handmade set comes with a mini nail file, wooden cuticle stick and application instructions. The set comes without glue or adhesive tabs.',
+    'Each handmade set comes with a mini nail file, wooden cuticle stick and application instructions. The set comes without glue or adhesive tabs. I find the mini nail glues sold in stores less reliable, so I recommend KISS. You can buy it yourself or add it to your order for 20 lei. One full-size bottle lasts for multiple applications.',
     'We offer XS, S, M and L. Consult the Size Guide and contact us on WhatsApp if you need help.',
-    'The set comes without liquid glue. You can use a quality nail glue such as KISS according to the manufacturer’s instructions.',
+    'You can add a full-size bottle of KISS nail glue to your order for 20 lei. Follow the manufacturer’s instructions for application.',
     'With proper preparation and application, they can last over a month. Wear time depends on technique, adhesive and day-to-day activity. Follow the application instructions included in the set.',
-    'This depends on how they were applied, removed and stored. Remove the nails gently and check the condition of each one before reuse.',
+    'Mostly yes, that’s why press-on nails are such a great option, but it depends on how they were applied, removed and stored. Remove the nails gently and check the condition of each one before reuse.',
     'Each set is handmade, so small variations in colour, placement and finish are possible. Colours can also vary with your screen and lighting.'
   ], [
     'We currently ship within Romania. Follow us on social media for future shipping updates.',

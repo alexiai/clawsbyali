@@ -8,7 +8,7 @@ const el = (tag, content) => {
   return node;
 };
 const escape = (value) => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-let language = localStorage.getItem('claws-language') === 'en' ? 'en' : 'ro';
+let language = localStorage.getItem('claws-language') === 'ro' ? 'ro' : 'en';
 let currency = localStorage.getItem('claws-currency') === 'EUR' ? 'EUR' : 'RON';
 const items = [];
 const drafts = new Map();
@@ -18,6 +18,9 @@ let timer;
 let statusTimer;
 let paused = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const nav = [['home','Acasă|Home'],['custom','Seturi la comandă|Custom sets'],['nails','Seturi gata făcute|Nail sets'],['sizing','Ghid de mărimi|Sizing'],['faq','Întrebări frecvente|FAQ'],['shipping','Livrare|Shipping'],['contact','Contact']];
+const homeSections = new Set(['home', 'custom', 'nails', 'home-links', 'contact']);
+const glueCost = 20;
+const urlFor = (id) => id === 'home' ? './' : '?page=' + id;
 const fingers = ['Police|Thumb','Arătător|Index','Mijlociu|Middle','Inelar|Ring','Mic|Pinky'];
 const sides = ['Mâna stângă|Left hand','Mâna dreaptă|Right hand'];
 const shapes = ['Migdală|Almond','Pătrat|Square','Stiletto','Coffin','Oval'];
@@ -32,14 +35,34 @@ function status(message) {
   statusTimer = setTimeout(() => { $('#status').textContent = ''; }, 3300);
 }
 function setMenu(open) {
-  $('.rail').classList.toggle('open', open);
+  $('#menu-panel').hidden = !open;
+  $('#menu-shade').hidden = !open;
   $('#menu').setAttribute('aria-expanded', open);
+  $('#menu').setAttribute('aria-label', open ? t('Închide meniul|Close menu') : t('Meniu|Menu'));
+}
+function currentPage() {
+  const requested = new URLSearchParams(location.search).get('page') || location.hash.slice(1);
+  return nav.some(([id]) => id === requested) ? requested : 'home';
 }
 function updateNav() {
+  const page = currentPage();
+  document.body.dataset.page = page;
+  document.title = page === 'home' ? 'Claws by Ali — Press-on nails' : t(nav.find(([id]) => id === page)[1]) + ' — Claws by Ali';
+  all('main > [id]').forEach(section => {
+    section.hidden = page === 'home' ? !homeSections.has(section.id) : section.id !== page;
+  });
+  const shippingDetails = $('#shipping details');
+  if (page === 'shipping') shippingDetails.open = true;
   all('#nav a').forEach(link => {
-    if (link.hash === (location.hash || '#home')) link.setAttribute('aria-current', 'location');
+    if (link.dataset.page === page) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
   });
+}
+function navigate(id) {
+  if (currentPage() !== id || location.hash) history.pushState(null, '', urlFor(id));
+  setMenu(false);
+  updateNav();
+  window.scrollTo({top: 0, behavior: 'instant'});
 }
 function syncPhoto() {
   const photo = (offset) => shop.photos[(currentPhoto + offset + shop.photos.length) % shop.photos.length];
@@ -73,11 +96,12 @@ function renderContent() {
   all('[data-currency]').forEach(node => node.setAttribute('aria-pressed', node.dataset.currency === currency));
   $('#previous').setAttribute('aria-label', t('Fotografia anterioară|Previous photo'));
   $('#next').setAttribute('aria-label', t('Fotografia următoare|Next photo'));
+  $('#menu').setAttribute('aria-label', $('#menu-panel').hidden ? t('Meniu|Menu') : t('Închide meniul|Close menu'));
   $('#close').setAttribute('aria-label', t('Închide|Close'));
   $('#nav').replaceChildren(...nav.map(([id, name]) => {
     const link = el('a',t(name));
-    link.href = '#' + id;
-    link.onclick = () => setMenu(false);
+    link.href = urlFor(id);
+    link.dataset.page = id;
     return link;
   }));
   updateNav();
@@ -120,8 +144,9 @@ function configure(index) {
   const kit = index === -1;
   const [name, cost] = kit ? ['Sizing kit',10] : shop.tiers[index];
   const draft = drafts.get(index) || {};
+  const glueChoice = '<label class="add-on"><input type="checkbox" name="glue"' + (draft.glue ? ' checked' : '') + '>' + t('Adaugă adeziv KISS|Add KISS nail glue') + ' · ' + price(glueCost) + '</label>';
   showDialog(t(name) + ' · ' + price(cost), '<form id="configure"><p class="notice">' + t('Site-ul pregătește cererea pentru WhatsApp. Stabilim acolo designul, costul final și plata.|The site prepares your request for WhatsApp. We confirm the design, final price and payment there.') + '</p><div class="pair"><label>' + t('Formă|Shape') + '<select name="shape" required><option value="">—</option>' + optionList(shapes,draft.shape) + '</select></label><label>' + t('Lungime|Length') + '<select name="length" required><option value="">—</option>' + optionList(lengths,draft.length) + '</select></label></div>' + (kit ? '' :
-    '<label>' + t('Descrie designul dorit|Describe your design') + '<textarea name="description" rows="3" maxlength="700" required placeholder="' + t('Culori, finisaj, detalii sau idei…|Colours, finish, details or ideas…') + '">' + escape(draft.description || '') + '</textarea></label><p class="notice">' + t('Dacă încă nu ai un model exact, alege categoria cea mai apropiată și scrie-ne ce ți-ar plăcea. Putem discuta și pe|If you are still exploring, choose the closest tier and tell us what you like. You can also reach out on') + ' <a class="text-link" href="https://www.tiktok.com/@clawsbyalix" target="_blank" rel="noopener">TikTok</a>.</p><label>' + t('Fotografii de referință (opțional)|Reference photos (optional)') + '<input type="file" accept="image/*" multiple id="refs"></label><p id="file-list" class="notice"></p><p class="notice">' + t('Pozele selectate se păstrează în această sesiune. Le vei atașa în conversația WhatsApp.|Selected photos stay in this session. Attach them in your WhatsApp conversation.') + '</p><div class="inline"><strong>' + t('Lățimea fiecărei unghii în mm|Width of each nail in mm') + '</strong><a class="text-link" href="#sizing" id="open-guide">' + t('Vezi ghidul|See size guide') + '</a></div><div class="hands">' + hand(0,draft) + hand(1,draft) + '</div>') + '<button class="action" type="submit">' + t('Adaugă în coș|Add to bag') + ' ↗</button></form>');
+    '<label>' + t('Descrie designul dorit|Describe your design') + '<textarea name="description" rows="3" maxlength="700" required placeholder="' + t('Culori, finisaj, detalii sau idei…|Colours, finish, details or ideas…') + '">' + escape(draft.description || '') + '</textarea></label><p class="notice">' + t('Dacă încă nu ai un model exact, alege categoria cea mai apropiată și scrie-ne ce ți-ar plăcea. Putem discuta și pe|If you are still exploring, choose the closest tier and tell us what you like. You can also reach out on') + ' <a class="text-link" href="https://www.tiktok.com/@clawsbyalix" target="_blank" rel="noopener">TikTok</a>.</p><label>' + t('Fotografii de referință (opțional)|Reference photos (optional)') + '<input type="file" accept="image/*" multiple id="refs"></label><p id="file-list" class="notice"></p><p class="notice">' + t('Pozele selectate se păstrează în această sesiune. Le vei atașa în conversația WhatsApp.|Selected photos stay in this session. Attach them in your WhatsApp conversation.') + '</p><div class="inline"><strong>' + t('Lățimea fiecărei unghii în mm|Width of each nail in mm') + '</strong><a class="text-link" href="?page=sizing" data-page="sizing" id="open-guide">' + t('Vezi ghidul|See size guide') + '</a></div><div class="hands">' + hand(0,draft) + hand(1,draft) + '</div>' + glueChoice) + '<button class="action" type="submit">' + t('Adaugă în coș|Add to bag') + ' ↗</button></form>');
   const form = $('#configure');
   let files = draft.files || [];
   const saveDraft = () => drafts.set(index, {...Object.fromEntries(new FormData(form)), files});
@@ -156,7 +181,8 @@ function updateCount() {
   $('#count').textContent = items.length;
 }
 function itemVariant(item) {
-  return t(shapes[item.fields.shape]) + ' · ' + t(lengths[item.fields.length]);
+  const variant = t(shapes[item.fields.shape]) + ' · ' + t(lengths[item.fields.length]);
+  return item.fields.glue ? variant + ' · ' + t('Adeziv KISS|KISS nail glue') + ' (+' + price(glueCost) + ')' : variant;
 }
 function orderMessage() {
   const lines = [t('Bună! Aș vrea să trimit o cerere pentru Claws by Ali.|Hi! I would like to send an order request to Claws by Ali.'), ''];
@@ -175,12 +201,12 @@ function orderMessage() {
   if (currency === 'EUR') lines.push(t('Prețuri orientative în EUR. Total estimat în lei: |Indicative EUR prices. Estimated total in RON: ') + (subtotal() + shop.shipping[delivery.method]));
   return lines.join('\n');
 }
-const subtotal = () => items.reduce((sum,item) => sum + item.cost, 0);
+const subtotal = () => items.reduce((sum,item) => sum + item.cost + (item.fields.glue ? glueCost : 0), 0);
 const methodName = (method) => method === 'pickup' ? 'Cargus SHIP & GO' : t('Cargus la adresă|Cargus to your address');
 function checkout() {
   const title = t('Coșul tău|Your bag');
   if (!items.length) {
-    showDialog(title, '<p>' + t('Coșul este gol.|Your bag is empty.') + '</p><p><a class="text-link" href="#custom" id="browse">' + t('Explorează seturile|Explore custom sets') + ' ↗</a></p>');
+    showDialog(title, '<p>' + t('Coșul este gol.|Your bag is empty.') + '</p><p><a class="text-link" href="?page=custom" data-page="custom" id="browse">' + t('Explorează seturile|Explore custom sets') + ' ↗</a></p>');
     $('#browse').onclick = () => dialog.close();
     return;
   }
@@ -242,7 +268,18 @@ function checkout() {
     if (photos.length) output.append(el('p', t('De atașat: |To attach: ') + photos.map(file => file.name).join(', ')));
   };
 }
-$('#menu').onclick = () => setMenu(!$('.rail').classList.contains('open'));
+$('#menu').onclick = () => {
+  const open = $('#menu-panel').hidden;
+  setMenu(open);
+  if (open) $('#nav a').focus();
+};
+$('#menu-shade').onclick = () => { setMenu(false); $('#menu').focus(); };
+document.addEventListener('click', event => {
+  const link = event.target.closest('a[data-page]');
+  if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  event.preventDefault();
+  navigate(link.dataset.page);
+});
 $('#bag').onclick = checkout;
 $('#kit').onclick = () => configure(-1);
 $('#close').onclick = () => dialog.close();
@@ -251,7 +288,8 @@ $('#previous').onclick = () => { cyclePhoto(-1); restartCarousel(); };
 $('#next').onclick = () => { cyclePhoto(1); restartCarousel(); };
 $('#pause').onclick = () => { paused = !paused; syncPhoto(); restartCarousel(); };
 window.addEventListener('hashchange', updateNav);
-window.addEventListener('keydown', event => { if (event.key === 'Escape') setMenu(false); });
+window.addEventListener('popstate', updateNav);
+window.addEventListener('keydown', event => { if (event.key === 'Escape' && !$('#menu-panel').hidden) { setMenu(false); $('#menu').focus(); } });
 all('[data-lang]').forEach(button => { button.onclick = () => {
   language = button.dataset.lang;
   localStorage.setItem('claws-language', language);

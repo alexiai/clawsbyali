@@ -1,20 +1,43 @@
 <!doctype html>
-<html lang="ro"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Claws by Ali — unghii press-on lucrate manual, la comandă.">
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Claws by Ali — handmade, made-to-order press-on nails.">
 <title>Claws by Ali — Press-on nails</title>
+<link rel="icon" href="assets/ca.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
 <script src="content.js" defer></script><script src="app.js" defer></script></head>
-<body><aside class="rail"><a href="#home" class="monogram" aria-label="Claws by Ali">Ca<span>✦</span></a><nav id="nav"></nav><div class="preferences"><div aria-label="Language"><button data-lang="ro">RO</button><button data-lang="en">EN</button></div><div aria-label="Currency"><button data-currency="RON">LEI</button><button data-currency="EUR">EUR</button></div></div></aside>
-<header><button id="menu" aria-controls="nav" aria-expanded="false"><span aria-hidden="true">☰</span> <span data-copy="Meniu|Menu"></span></button><a href="#home" class="wordmark">Claws by Ali<span>✦</span></a><button id="bag"><span data-copy="Coș|Bag"></span> <span id="count">0</span></button></header>
+<body>
+<header class="site-header"><div class="header-inner">
+<button id="menu" type="button" aria-controls="menu-panel" aria-expanded="false" aria-label="Menu"><span class="hamburger" aria-hidden="true"></span></button>
+<a href="./" data-page="home" class="brand" aria-label="Claws by Ali"><img src="assets/ca.svg" alt=""><span>Claws by Ali</span></a>
+<button id="bag" type="button"><span data-copy="Coș|Bag"></span> <span id="count">0</span></button>
+</div>
+<aside id="menu-panel" class="rail" hidden><nav id="nav" aria-label="Main menu"></nav><div class="preferences"><div aria-label="Language"><button data-lang="en">EN</button><button data-lang="ro">RO</button></div><div aria-label="Currency"><button data-currency="RON">LEI</button><button data-currency="EUR">EUR</button></div></div></aside>
+</header>
+<button id="menu-shade" tabindex="-1" hidden aria-hidden="true"></button>
 <main>
-<section id="home" class="hero"><div class="intro"><p class="eyebrow"><span></span> PRESS-ON NAILS</p><h1>Claws<br><em>by Ali</em><sup>✦</sup></h1><p class="tagline" data-copy="Unghii lucrate manual, după ideea ta.|Handmade nails, inspired by your ideas."></p><a class="action" href="#custom"><span data-copy="Creează setul tău|Design your set"></span> ↗</a></div><div class="editorial"><div class="photo photo-back left"><img alt="" id="prev-photo"></div><div class="photo photo-back right"><img alt="" id="next-photo"></div><figure class="photo hero-photo"><img id="slide" src="assets/strawberry.jpg" alt=""><figcaption><span>CLAWS BY ALI</span><span id="slide-count"></span></figcaption></figure><span aria-hidden="true" class="spark s1">✧</span><span aria-hidden="true" class="spark s2">✦</span><div class="controls"><button id="previous" aria-label="Previous photo">←</button><button id="pause" aria-label="Pause carousel">Ⅱ</button><button id="next" aria-label="Next photo">→</button></div></div></section>
-<div class="ticker">✦ &nbsp; HANDMADE PRESS-ONS &nbsp; ✦ &nbsp; MADE TO ORDER &nbsp; ✦ &nbsp; CLAWS BY ALI &nbsp; ✦</div>
-<section id="custom" class="section"><p class="eyebrow" data-copy="Atelier la comandă|Made to order"></p><div class="section-head"><h2>Custom <em>sets</em></h2><p data-copy="Alege categoria cea mai apropiată de ideea ta. Dacă ai nevoie de ajutor, stabilim detaliile pe WhatsApp sau pe TikTok.|Choose the closest tier for your idea. If you need help, we can refine the details on WhatsApp or TikTok."></p></div><div id="tiers" class="tiers"></div></section>
-<section id="nails" class="section ready"><h2>Nail <em>sets</em></h2><img src="assets/soon.jpg" alt="Coming soon" loading="lazy"></section>
+<section id="home" class="hero" aria-labelledby="hero-title">
+<div class="poster">
+<h1 id="hero-title" class="chrome"><span>Claws</span> <i>by</i> <span>Ali</span></h1>
+<div class="editorial">
+<div class="photo photo-back left"><img alt="" id="prev-photo"></div>
+<div class="photo photo-back right"><img alt="" id="next-photo"></div>
+<figure class="photo hero-photo"><img id="slide" src="assets/strawberry.jpg" alt=""></figure>
+</div>
+<p class="poster-sub chrome" data-copy="Unghii press on|Press on nails"></p>
+</div>
+<div class="controls"><button id="previous" aria-label="Previous photo">←</button><button id="pause" aria-label="Pause carousel">Ⅱ</button><span id="slide-count"></span><button id="next" aria-label="Next photo">→</button></div>
+</section>
+<section id="custom" class="section"><div class="section-head"><h2 data-copy="Seturi la comandă|Custom sets"></h2><p data-copy="Alege categoria cea mai apropiată de ideea ta. Dacă ai nevoie de ajutor, stabilim detaliile pe WhatsApp sau pe TikTok.|Choose the closest tier for your idea. If you need help, we can refine the details on WhatsApp or TikTok."></p></div><div id="tiers" class="tiers"></div></section>
+<section id="nails" class="ready" aria-labelledby="nails-title"><h2 id="nails-title" class="sr-only" data-copy="Seturi gata făcute, în curând|Nail sets, coming soon"></h2><div class="coming-art" aria-hidden="true"></div></section>
 <section id="sizing" class="section sizing"><h2 data-copy="Ghid de mărimi|Size guide"></h2><div class="guide-grid"><article><h3>Sizing kit</h3><p data-copy="Primești mostre de tipsuri în forma și lungimea aleasă. Probează-le pe fiecare deget și notează mărimile pentru următoarea comandă.|Try sample tips in your chosen shape and length. Record the best fit for each finger for your next order."></p><button class="action" id="kit"></button></article><article><h3 data-copy="Măsoară acasă|Measure at home"></h3><ol id="size-steps"></ol><img src="assets/measure.jpg" alt="" loading="lazy"></article></div><details><summary data-copy="Tabel orientativ de mărimi|Reference size chart"></summary><div id="size-table"></div></details></section>
 <section id="faq" class="section faq"><h2 data-copy="Întrebări frecvente|Frequently asked questions"></h2><div id="questions"></div></section>
 <section id="shipping" class="section shipping"><div class="section-head"><h2 data-copy="Livrare|Shipping"></h2><p data-copy="5–7 zile lucrătoare pentru realizare, apoi aproximativ 1–3 zile pentru transport prin Cargus în România.|5–7 business days to make, then approximately 1–3 days for Cargus delivery in Romania."></p></div><details><summary data-copy="Politica de livrare|Shipping policy"></summary><div id="policy"></div></details></section>
+<section id="home-links" class="section home-links">
+<article><h2 data-copy="Întrebări frecvente|Frequently asked questions"></h2><p data-copy="Comenzi, aplicare și reutilizare.|Ordering, application and reuse."></p><a data-page="faq" href="?page=faq" data-copy="Vezi răspunsurile ↗|Read the FAQ ↗"></a></article>
+<article><h2 data-copy="Livrare|Shipping"></h2><p data-copy="Realizare în 5–7 zile lucrătoare și livrare prin Cargus în România.|Made in 5–7 business days and shipped by Cargus within Romania."></p><a data-page="shipping" href="?page=shipping" data-copy="Detalii de livrare ↗|Shipping details ↗"></a></article>
+</section>
 <footer id="contact"><h2>Contact</h2><p data-copy="Scrie-mi dacă ai întrebări sau vrei să discutăm o idee.|Get in touch with questions or to talk through an idea."></p><div><a href="mailto:ilariailariaaa8@gmail.com">ilariailariaaa8@gmail.com ↗</a><a href="https://www.tiktok.com/@clawsbyalix">TikTok @clawsbyalix ↗</a></div><p class="wordmark">Claws by Ali ✦</p></footer>
 </main>
-<dialog id="dialog"><div class="dialog-top"><h2 id="dialog-title"></h2><button id="close" type="button" aria-label="Close">×</button></div><div id="dialog-body"></div></dialog>
+<footer class="site-footer"><a href="./" data-page="home">Claws by Ali</a><a href="?page=contact" data-page="contact" data-copy="Contact|Contact"></a><a href="?page=sizing" data-page="sizing" data-copy="Ghid de mărimi|Size guide"></a></footer>
+<dialog id="dialog" aria-labelledby="dialog-title"><div class="dialog-top"><h2 id="dialog-title"></h2><button id="close" type="button" aria-label="Close">×</button></div><div id="dialog-body"></div></dialog>
 <div id="status" role="status"></div></body></html>
