@@ -13,6 +13,7 @@ let currency = localStorage.getItem('claws-currency') === 'EUR' ? 'EUR' : 'RON';
 const items = [];
 const drafts = new Map();
 let delivery = { method: 'pickup' };
+let disposeDelivery;
 let carouselPosition = 2;
 let statusTimer;
 let preferredSizing = 'measure';
@@ -111,7 +112,7 @@ function renderContent() {
     };
     return button;
   }));
-  $('#kit').textContent = t('Alege sizing kit |Choose sizing kit ') + '· ' + price(10);
+  $('#kit').textContent = t('Alege kitul de măsurare |Choose sizing kit ') + '· ' + price(10);
   $('#size-steps').replaceChildren(...sizingSteps.map(step => el('li', t(step))));
   const sizeRows = [['XS',14,11,12,10,8],['S',15,12,13,11,8],['M',16,12,13,11,9],['L',18,13,14,12,10]];
   $('#size-table').innerHTML = '<p>' + t('Valorile în mm sunt orientative. Pentru un set la comandă, notează lățimea exactă pentru fiecare unghie.|Widths in mm are a reference. For a custom set, provide the actual width of each nail.') + '</p><div class="table-scroll"><table><thead><tr><th>' + t('Mărime|Size') + '</th>' + fingers.map(finger => '<th scope="col">' + t(finger) + '</th>').join('') + '</tr></thead><tbody>' + sizeRows.map(row => '<tr><th scope="row">' + row[0] + '</th>' + row.slice(1).map(value => '<td>' + value + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>';
@@ -134,6 +135,7 @@ function renderContent() {
       const link = el('a', part);
       link.href = faqLinks[part];
       link.className = 'text-link';
+      if (part === 'WhatsApp') link.setAttribute('aria-label', 'WhatsApp +40 754552481');
       if (link.href === new URL('?page=sizing', location.href).href) link.dataset.page = 'sizing';
       answer.append(link);
     });
@@ -143,6 +145,8 @@ function renderContent() {
   $('#policy').replaceChildren(el('p', t('Actualizată la |Last updated ') + lastUpdated), ...shippingPolicy.flatMap(([title, body], index) => [el('h3', (index + 1) + '. ' + t(title)), el('p', language === 'en' ? shippingEnglish[index] : body)]));
 }
 function showDialog(title, markup, mode = '') {
+  disposeDelivery?.();
+  disposeDelivery = undefined;
   dialog.className = mode;
   $('#dialog-title').textContent = title;
   dialogBody.innerHTML = markup;
@@ -163,18 +167,18 @@ function hand(side, draft) {
 }
 function configure(index) {
   const kit = index === -1;
-  const [name, cost] = kit ? ['Sizing kit',10] : shop.tiers[index];
+  const [name, cost] = kit ? ['Kit de măsurare|Sizing kit',10] : shop.tiers[index];
   const draft = drafts.get(index) || {};
   const sizing = draft.sizing || preferredSizing;
   const sizingChoice = optionButtons('sizing', 'Metoda de măsurare|Sizing method', [
     ['measure', 'Introduc măsurătorile mele|Enter my measurements'],
-    ['kit', t('Comand un sizing kit|Order a sizing kit') + ' · +' + price(10)]
+    ['kit', t('Comand un kit de măsurare|Order a sizing kit') + ' · +' + price(10)]
   ], sizing);
   const variants = optionButtons('shape', 'Formă|Shape', shapes.map((value, i) => [i,value]), draft.shape) +
     optionButtons('length', 'Lungime|Length', lengths.map((value, i) => [i,value]), draft.length);
   const glueChoice = '<label class="add-on"><input type="checkbox" name="glue"' + (draft.glue ? ' checked' : '') + '>' + t('Adaugă adeziv KISS|Add KISS nail glue') + ' · ' + price(glueCost) + '</label>';
   const markup = '<form id="configure">' + variants + (kit ? '' :
-    '<label>' + t('Descrie designul dorit|Describe your design') + '<textarea name="description" rows="3" maxlength="700" required placeholder="' + t('Culori, finisaj, detalii sau idei…|Colours, finish, details or ideas…') + '">' + escape(draft.description || '') + '</textarea></label><p class="notice">' + t('Dacă încă nu ai un model exact, alege categoria cea mai apropiată și scrie-ne ce ți-ar plăcea. Putem discuta și pe|If you are still exploring, choose the closest tier and tell us what you like. You can also reach out on') + ' <a class="text-link" href="https://www.tiktok.com/@clawsbyalix" target="_blank" rel="noopener">TikTok</a>.</p><label>' + t('Fotografii de referință (opțional)|Reference photos (optional)') + '<input type="file" accept="image/*" multiple id="refs"></label><p id="file-list" class="notice"></p><p class="notice">' + t('Pozele selectate se păstrează în această sesiune. Le vei atașa în conversația WhatsApp.|Selected photos stay in this session. Attach them in your WhatsApp conversation.') + '</p>' + sizingChoice + '<div id="measurement-fields"><div class="inline"><strong>' + t('Lățimea fiecărei unghii în mm|Width of each nail in mm') + '</strong><a class="text-link" href="?page=sizing" data-page="sizing" id="open-guide">' + t('Ai nevoie de ajutor cu măsurătorile?|Need help with sizing?') + '</a></div><div class="hands">' + hand(0,draft) + hand(1,draft) + '</div></div><p class="notice" id="kit-note" hidden>' + t('Îți trimitem întâi kitul în forma și lungimea alese. Ne comunici mărimile pe WhatsApp înainte să realizăm setul.|We’ll send the kit in your chosen shape and length first. Share your sizes on WhatsApp before we make the set.') + '</p>' + glueChoice) + '<button class="action" type="submit">' + t('Adaugă în coș|Add to bag') + ' ↗</button></form>';
+    '<label>' + t('Descrie designul dorit|Describe your design') + '<textarea name="description" rows="3" maxlength="700" required placeholder="' + t('Culori, finisaj, detalii sau idei…|Colours, finish, details or ideas…') + '">' + escape(draft.description || '') + '</textarea></label><p class="notice">' + t('Dacă încă nu ai un model exact, alege categoria cea mai apropiată și scrie-ne ce ți-ar plăcea. Putem discuta și pe|If you are still exploring, choose the closest tier and tell us what you like. You can also reach out on') + ' <a class="text-link" href="https://www.tiktok.com/@clawsbyalix" target="_blank" rel="noopener">TikTok</a>.</p><label>' + t('Fotografii de referință (opțional)|Reference photos (optional)') + '<input type="file" accept="image/*" multiple id="refs"></label><p id="file-list" class="notice"></p><p class="notice">' + t('Pozele selectate se păstrează în această sesiune. Le vei atașa în conversația WhatsApp.|Selected photos stay in this session. Attach them in your WhatsApp conversation.') + '</p>' + sizingChoice + '<div id="measurement-fields"><div class="inline"><strong>' + t('Lățimea fiecărei unghii în mm|Width of each nail in mm') + '</strong><a class="text-link" href="?page=sizing" data-page="sizing" id="open-guide">' + t('Ai nevoie de ajutor cu măsurătorile?|Need help with sizing?') + '</a></div><div class="hands">' + hand(0,draft) + hand(1,draft) + '</div></div><p class="notice" id="kit-note" hidden>' + t('Îți trimitem întâi kitul în forma și lungimea alese. Ne comunici mărimile pe WhatsApp înainte să realizăm setul.|We’ll send the kit in your chosen shape and length first. Share your sizes on WhatsApp before we make the set.') + '</p>' + glueChoice) + '<button class="action" type="submit">' + t('Adaugă în coș|Add to cart') + ' ↗</button></form>';
   if (kit) {
     showDialog(t(name) + ' · ' + price(cost), markup);
   } else {
@@ -222,7 +226,7 @@ function configure(index) {
     if (kit) dialog.close();
     else configure(index);
     checkout();
-    status(t('Adăugat în coș|Added to your bag'));
+    status(t('Adăugat în coș|Added to your cart'));
   };
 }
 function updateCount() {
@@ -230,7 +234,7 @@ function updateCount() {
 }
 function itemVariant(item) {
   const parts = [t(shapes[item.fields.shape]), t(lengths[item.fields.length])];
-  if (item.fields.sizing === 'kit') parts.push('Sizing kit (+' + price(10) + ')');
+  if (item.fields.sizing === 'kit') parts.push(t('Kit de măsurare|Sizing kit') + ' (+' + price(10) + ')');
   if (item.fields.glue) parts.push(t('Adeziv KISS|KISS nail glue') + ' (+' + price(glueCost) + ')');
   return parts.join(' · ');
 }
@@ -246,7 +250,7 @@ function orderMessage() {
     }
     lines.push('');
   });
-  lines.push(t('Telefon: |Phone: ') + delivery.phone, t('Adresă: |Address: ') + delivery.address, t('Localitate și județ: |City and county: ') + delivery.city, t('Metoda de livrare: |Delivery method: ') + methodName(delivery.method));
+  lines.push(t('Telefon: |Phone: ') + delivery.phone, ...(delivery.address ? [t('Adresă: |Address: ') + delivery.address] : []), t('Județ: |County: ') + delivery.county, t('Localitate: |Locality: ') + delivery.city, t('Metoda de livrare: |Delivery method: ') + methodName(delivery.method));
   if (delivery.method === 'pickup') lines.push('SHIP & GO: ' + delivery.pickup);
   lines.push(t('Transport estimat: |Estimated shipping: ') + price(shop.shipping[delivery.method]), t('Total estimat: |Estimated total: ') + price(subtotal() + shop.shipping[delivery.method]));
   if (currency === 'EUR') lines.push(t('Prețuri orientative în EUR. Total estimat în lei: |Indicative EUR prices. Estimated total in RON: ') + (subtotal() + shop.shipping[delivery.method]));
@@ -262,19 +266,23 @@ function checkout() {
     return;
   }
   const field = (name, label, type, autocomplete) => '<label>' + t(label) + '<input maxlength="160" required type="' + type + '" name="' + name + '" autocomplete="' + autocomplete + '" value="' + escape(delivery[name] || '') + '"></label>';
-  showDialog(title, items.map((item, index) => '<div class="line-item"><div><strong>' + t(item.name) + ' · ' + price(item.cost) + '</strong><small>' + itemVariant(item) + '</small></div><button type="button" class="text-link" data-remove="' + index + '">' + t('Elimină|Remove') + '</button></div>').join('') + '<form id="checkout"><dl class="totals"><div><dt>' + t('Subtotal|Subtotal') + '</dt><dd>' + price(subtotal()) + '</dd></div><div><dt>' + t('Transport estimat|Estimated shipping') + '</dt><dd id="shipping-price"></dd></div><div><dt><strong>' + t('Total estimat|Estimated total') + '</strong></dt><dd id="total"></dd></div></dl><p class="notice">' + t('Costul final se confirmă pe WhatsApp. Realizare în 5–7 zile lucrătoare, apoi 1–3 zile pentru transport.|Final cost is confirmed on WhatsApp. Allow 5–7 business days for production and 1–3 days for shipping.') + (currency === 'EUR' ? ' ' + t('Prețurile în EUR sunt orientative (5 lei/€).|EUR prices are indicative (5 RON/€).') : '') + '</p><label>' + t('Metodă de livrare|Delivery method') + '<select name="method"><option value="pickup">' + methodName('pickup') + '</option><option value="address">' + methodName('address') + '</option></select></label>' + field('city','Localitate și județ|City and county','text','address-level2') + field('address','Adresă completă|Full address','text','street-address') + '<div id="pickup-field">' + field('pickup','Punct SHIP & GO preferat|Preferred SHIP & GO location','text','off') + '</div>' + field('phone','Telefon|Phone number','tel','tel') + '<button class="action" type="submit">' + (shop.whatsapp ? t('Deschide WhatsApp|Open WhatsApp') : t('Pregătește cererea|Prepare request')) + ' ↗</button><div id="request-output"></div></form>', 'cart-drawer');
+  showDialog(title, items.map((item, index) => '<div class="line-item"><div><strong>' + t(item.name) + ' · ' + price(item.cost) + '</strong><small>' + itemVariant(item) + '</small></div><button type="button" class="text-link" data-remove="' + index + '">' + t('Elimină|Remove') + '</button></div>').join('') + '<form id="checkout"><dl class="totals"><div><dt>' + t('Subtotal|Subtotal') + '</dt><dd>' + price(subtotal()) + '</dd></div><div><dt>' + t('Transport estimat|Estimated shipping') + '</dt><dd id="shipping-price"></dd></div><div><dt><strong>' + t('Total estimat|Estimated total') + '</strong></dt><dd id="total"></dd></div></dl><p class="notice">' + t('Costul final se confirmă pe WhatsApp. Realizare în 5–7 zile lucrătoare, apoi 1–3 zile pentru transport.|Final cost is confirmed on WhatsApp. Allow 5–7 business days for production and 1–3 days for shipping.') + (currency === 'EUR' ? ' ' + t('Prețurile în EUR sunt orientative (5 lei/€).|EUR prices are indicative (5 RON/€).') : '') + '</p><label>' + t('Metodă de livrare|Delivery method') + '<select name="method"><option value="pickup">' + methodName('pickup') + '</option><option value="address">' + methodName('address') + '</option></select></label>' + deliveryFields(t, delivery, escape) + '<div id="street-address">' + field('address','Adresă completă|Full address','text','street-address') + '</div>' + field('phone','Telefon|Phone number','tel','tel') + '<button class="action" type="submit">' + (shop.whatsapp ? t('Deschide WhatsApp|Open WhatsApp') : t('Pregătește cererea|Prepare request')) + ' ↗</button><div id="request-output"></div></form>', 'cart-drawer');
   const form = $('#checkout');
   form.elements.method.value = delivery.method;
+  const selector = initDeliverySelector(form, t, delivery);
+  disposeDelivery = selector.dispose;
   function updateDelivery() {
     const method = form.elements.method.value;
     const pickup = method === 'pickup';
     $('#pickup-field').hidden = !pickup;
-    form.elements.pickup.required = pickup;
+    $('#street-address').hidden = pickup;
+    form.elements.address.disabled = pickup;
+    selector.setPickupEnabled(pickup);
     $('#shipping-price').textContent = price(shop.shipping[method]);
     $('#total').textContent = price(subtotal() + shop.shipping[method]);
   }
   updateDelivery();
-  const readDelivery = () => { delivery = Object.fromEntries(new FormData(form)); };
+  const readDelivery = () => { delivery = {...Object.fromEntries(new FormData(form)), pickupId: selector.pointId()}; };
   form.addEventListener('input', () => { readDelivery(); updateDelivery(); $('#request-output').replaceChildren(); });
   all('[data-remove]').forEach(button => {
     button.onclick = () => {
@@ -287,10 +295,10 @@ function checkout() {
   form.onsubmit = (event) => {
     event.preventDefault();
     readDelivery();
+    if (!selector.complete(delivery)) return;
     const message = orderMessage();
     const photos = items.flatMap(item => item.files);
     const whatsappUrl = shop.whatsapp && ('https://wa.me/' + shop.whatsapp + '?text=' + encodeURIComponent(message));
-    if (whatsappUrl) window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
     const output = $('#request-output');
     output.replaceChildren(el('p', shop.whatsapp ? t('Trimite mesajul în conversație și atașează acolo fotografiile alese.|Send the message in the chat and attach your selected photos there.') : t('Numărul de WhatsApp al atelierului nu este configurat. Poți copia cererea sau o poți deschide în aplicația de e-mail.|The studio’s WhatsApp number has not been configured. You can copy the request or open it in your email app.')));
     const preview = el('textarea');
@@ -326,6 +334,7 @@ function checkout() {
     actions.append(copy,email);
     output.append(preview,actions);
     if (photos.length) output.append(el('p', t('De atașat: |To attach: ') + photos.map(file => file.name).join(', ')));
+    if (whatsappUrl) location.assign(whatsappUrl);
   };
 }
 $('#menu').onclick = () => {
@@ -342,7 +351,7 @@ document.addEventListener('click', event => {
 });
 $('#bag').onclick = checkout;
 $('#kit').onclick = () => configure(-1);
-dialog.addEventListener('close', () => { if (!dialog.open) dialogBody.replaceChildren(); });
+dialog.addEventListener('close', () => { if (!dialog.open) { disposeDelivery?.(); disposeDelivery = undefined; dialogBody.replaceChildren(); } });
 $('#close').onclick = () => dialog.close();
 dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
 $('#kit-sizing').onclick = () => { preferredSizing = 'kit'; };
@@ -378,7 +387,9 @@ function drawCarousel() {
   slots.forEach(({offset, card, layers}) => {
     const from = base + offset;
     layers.forEach(({frame, image}, layer) => {
-      const file = 'assets/' + shop.photos[indexFor(from + layer)][0] + '.jpg';
+      const photo = shop.photos[indexFor(from + layer)][0];
+      const file = 'assets/' + photo + '.jpg';
+      image.classList.toggle('landscape-tiger', photo === 'tiger');
       if (image.getAttribute('src') !== file) image.src = file;
       const phase = layer - progress;
       frame.style.setProperty('--shift', (phase * 26).toFixed(2) + '%');
