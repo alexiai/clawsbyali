@@ -97,7 +97,10 @@ function renderContent() {
     const button = el('a');
     button.className = 'tier';
     button.href = '?page=product&set=' + flower;
-    button.innerHTML = '<span class="tier-art"><img loading="lazy" src="assets/' + flower + '.jpg" alt=""><strong>' + t(name) + '</strong></span><span class="tier-price">' + price(cost) + '</span>';
+    const label = t(name);
+    const splitAt = label.indexOf(' ');
+    const title = escape(label.slice(0, splitAt)) + '<br>' + escape(label.slice(splitAt + 1));
+    button.innerHTML = '<span class="tier-art"><img loading="lazy" src="assets/' + flower + '.jpg" alt=""><strong>' + title + '</strong></span><span class="tier-price">' + price(cost) + '</span>';
     button.onclick = event => {
       if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       event.preventDefault();
@@ -349,11 +352,18 @@ const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const slots = [-1, 0, 1].map(offset => {
   const card = el('figure');
   card.className = 'photo photo-slot';
-  const layers = [el('img'), el('img')];
-  const photoWindow = el('div');
-  photoWindow.className = 'slot-window';
-  layers.forEach(image => { image.alt = ''; photoWindow.append(image); });
-  card.append(photoWindow);
+  const layers = [0, 1].map(() => {
+    const frame = el('div');
+    frame.className = 'moving-frame';
+    const photoWindow = el('div');
+    photoWindow.className = 'slot-window';
+    const image = el('img');
+    image.alt = '';
+    photoWindow.append(image);
+    frame.append(photoWindow);
+    card.append(frame);
+    return {frame, image};
+  });
   return {offset, card, layers};
 });
 ring.replaceChildren(...slots.map(slot => slot.card));
@@ -367,15 +377,17 @@ function drawCarousel() {
   const active = indexFor(Math.round(carouselPosition));
   slots.forEach(({offset, card, layers}) => {
     const from = base + offset;
-    layers.forEach((image, layer) => {
+    layers.forEach(({frame, image}, layer) => {
       const file = 'assets/' + shop.photos[indexFor(from + layer)][0] + '.jpg';
       if (image.getAttribute('src') !== file) image.src = file;
-      image.style.setProperty('--shift', ((layer - progress) * 38).toFixed(2) + '%');
-      image.style.setProperty('--turn', ((layer - progress) * 14).toFixed(2) + 'deg');
-      image.style.opacity = layer === 0 ? 1 : progress;
+      const phase = layer - progress;
+      frame.style.setProperty('--shift', (phase * 26).toFixed(2) + '%');
+      frame.style.setProperty('--dip', (Math.abs(phase) * 9).toFixed(2) + '%');
+      frame.style.setProperty('--turn', (phase * 11).toFixed(2) + 'deg');
+      frame.style.opacity = layer === 0 ? 1 : progress;
     });
     card.setAttribute('aria-hidden', offset !== 0);
-    layers[0].alt = offset === 0 ? t(shop.photos[active][1]) : '';
+    layers[0].image.alt = offset === 0 ? t(shop.photos[active][1]) : '';
   });
   const countLabel = (active + 1) + ' / ' + count;
   if ($('#slide-count').textContent !== countLabel) $('#slide-count').textContent = countLabel;
