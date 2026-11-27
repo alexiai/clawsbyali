@@ -7,13 +7,14 @@ header{position:sticky;top:0;z-index:6;background:#fffdfd;border-bottom:1px soli
 .brand{display:flex;align-items:center;gap:9px;color:#252024;font:italic clamp(1.3rem,3vw,1.8rem)/1 var(--serif);letter-spacing:-.055em}.brand img{width:38px;height:38px}
 .rail{position:absolute;top:100%;left:0;width:min(335px,88vw);max-height:calc(100dvh - 66px);overflow:auto;background:#fffdfd;padding:18px 22px 24px;box-shadow:0 20px 36px #3a15232a;border-right:1px solid #eadfe5}
 .rail nav{display:grid}.rail nav a{padding:10px 0;border-bottom:1px solid #eee4e9}.rail nav a[aria-current]{font-weight:700}.preferences{display:grid;gap:8px;margin-top:22px}.preferences div{display:grid;border:1px solid var(--line);border-radius:0;overflow:hidden}.preferences button{border:0;background:none;padding:7px 11px;min-width:68px;font-size:.75rem;text-align:left}.preferences button+button{border-top:1px solid var(--line)}.preferences [aria-pressed=true]{background:var(--ink);color:white}#menu-shade{position:fixed;inset:66px 0 0;border:0;background:#24131d40;z-index:5}
-.hero{position:relative;overflow:hidden;background:#080410;aspect-ratio:1580/995}
+.hero{position:relative;overflow:hidden;background:#080410;aspect-ratio:1580/995;container-type:inline-size}
+@media(min-width:721px){.hero{width:min(100%,max(540px,calc((100svh - 67px) * 1580 / 995)));margin-inline:auto}}
 .hero-art,.hero-art img,.editorial,.carousel-ring{display:block;position:absolute;inset:0;width:100%;height:100%}
 .hero-art img{object-fit:fill}
 .editorial{touch-action:pan-y;cursor:grab;user-select:none;outline-offset:-5px}
 .editorial.dragging{cursor:grabbing}
 .carousel-ring{pointer-events:none;isolation:isolate}
-.carousel-card{position:absolute;left:49%;top:57.7%;width:26.3%;height:40.5%;margin:0;background:white;box-shadow:0 6px 20px #0008;transform:translate3d(calc(-50% + var(--orbit-x,0) * 39vw),calc(-50% + var(--orbit-depth,0) * 10vw),0) rotate(var(--orbit-tilt,0deg)) scale(var(--orbit-scale,1));will-change:transform,opacity}
+.carousel-card{position:absolute;left:49%;top:57.7%;width:26.3%;height:40.5%;margin:0;background:white;box-shadow:0 6px 20px #0008;transform:translate3d(calc(-50% + var(--orbit-x,0) * 39cqw),calc(-50% + var(--orbit-depth,0) * 10cqw),0) rotate(var(--orbit-tilt,0deg)) scale(var(--orbit-scale,1));will-change:transform,opacity}
 .slot-window{position:absolute;inset:3.8% 3.8% 8%;overflow:hidden;background:#151219}
 .slot-window img{height:100%;object-fit:cover;pointer-events:none}
 #close{background:#fff9fb;border:1px solid #d8abc1;border-radius:30px;min-width:36px;padding:3px 8px}
@@ -50,7 +51,7 @@ dialog{padding:0;width:min(690px,calc(100% - 24px));max-height:92dvh;border:1px 
 
 .brand-name{font:900 clamp(1.05rem,2.1vw,1.65rem)/1.18 Orbitron,system-ui,sans-serif;letter-spacing:-.045em}.site-footer .brand-name{font-size:1rem}#bag{display:inline-flex;align-items:center;gap:5px}.desktop-preferences summary{display:block;list-style:none}.desktop-preferences summary::-webkit-details-marker{display:none}.preferences{grid-auto-flow:column;justify-content:start}.preferences div{display:flex}.preferences button+button{border-top:0;border-left:1px solid var(--line)}.desktop-preferences .preferences{max-width:90vw}
 .guide-grid article{padding:0;background:none;border:0;border-radius:0}.guide-grid{column-gap:clamp(22px,5vw,70px);row-gap:30px}.size-chart{margin-top:35px;border-top:1px solid var(--line);padding-top:20px}.size-chart h3{margin-bottom:12px}.faq-outro{margin-top:30px}.faq #questions p{white-space:pre-line}
-@media(max-width:720px){.hero{aspect-ratio:756/1176}.carousel-card{left:49.2%;top:49.2%;width:32.9%;height:20.6%;transform:translate3d(calc(-50% + var(--orbit-x,0) * 45vw),calc(-50% + var(--orbit-depth,0) * 7vw),0) rotate(var(--orbit-tilt,0deg)) scale(var(--orbit-scale,1))}.preferences button{min-width:45px}}
+@media(max-width:720px){.hero{aspect-ratio:756/1176}.carousel-card{left:49.2%;top:49.2%;width:32.9%;height:20.6%;transform:translate3d(calc(-50% + var(--orbit-x,0) * 45cqw),calc(-50% + var(--orbit-depth,0) * 7cqw),0) rotate(var(--orbit-tilt,0deg)) scale(var(--orbit-scale,1))}.preferences button{min-width:45px}}
 @media(max-width:360px){#bag svg{width:15px}.brand-name{font-size:.95rem}}
 
 #custom .section-head{display:grid;justify-content:start;gap:7px;margin:0 0 25px}#custom .section-head p{max-width:none;line-height:1.48}
